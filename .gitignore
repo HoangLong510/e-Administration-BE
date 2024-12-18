@@ -1,0 +1,71 @@
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Dd]istro/
+[Dd]evelopment/
+[Dd]ebug/*/
+[Dd]ebugPublic/*/
+[Dd]istro/*/
+
+# User-specific files for Rider
+.idea/
+
+# ASP.NET Scaffolding
+Scaffolding/
+
+# Tệp nhị phân
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.so
+*.dylib
+*.lib
+*.obj
+*.o
+*.a
+
+# Tệp của Visual Studio Code
+.vscode/
+
+# Thư mục build của nuget
+.nuget/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Thư mục .vs cho Visual Studio (thư mục chứa các cài đặt IDE và các tệp tạm thời)
+.vs/
+
+# Bỏ qua thư mục obj (intermediate files)
+**/obj/
+
+# Các tệp chứa thông tin cấu hình của .NET Core CLI
+appsettings*.json
+
+# Các thư mục log
+logs/
+log/
+
+# Lưu trữ trạng thái tạm thời của dịch vụ
+tmp/
+
+# Tệp nhị phân hoặc thư mục tạm của Docker
+.docker/
+
+# Lưu trữ các tệp tạm thời của Git
+*.tgz
