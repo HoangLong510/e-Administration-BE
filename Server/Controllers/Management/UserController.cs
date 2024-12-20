@@ -236,5 +236,147 @@ namespace Server.Controllers.Management
                 Message = message
             });
         }
+
+        [HttpGet("get-user/{id}")]
+        public async Task<ActionResult> GetUser (int Id)
+        {
+            var token = Request.Cookies["token"];
+            var role = tokenService.GetRoleFromToken(token);
+            if (role != "Admin")
+            {
+                return Unauthorized(new
+                {
+                    Success = false,
+                    Message = "You do not have permission to perform this action"
+                });
+            }
+
+            var user = await userRepo.GetUserById(Id);
+
+            if (user == null)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "User not found"
+                });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                User = user
+            });
+        }
+
+        [HttpPut("edit-user")]
+        public async Task<ActionResult> EditUser (UserEditDto user)
+        {
+            var token = Request.Cookies["token"];
+            var role = tokenService.GetRoleFromToken(token);
+            if (role != "Admin")
+            {
+                return Unauthorized(new
+                {
+                    Success = false,
+                    Message = "You do not have permission to perform this action"
+                });
+            }
+
+            var errors = new Dictionary<string, string>();
+
+            // check fullname
+            if (string.IsNullOrWhiteSpace(user.FullName))
+            {
+                errors["fullName"] = "Full name is required";
+            }
+            else
+            {
+                string pattern = @"^(?! )[a-zA-Z\u0080-\uFFFF\s]{2,50}(?<! )$";
+                Regex regex = new Regex(pattern);
+                if (!regex.IsMatch(user.FullName))
+                {
+                    errors["fullName"] = "Full name must be between 2 and 50 characters and not contain any special characters";
+                }
+            }
+
+            // check email
+            if (string.IsNullOrWhiteSpace(user.Email))
+            {
+                errors["email"] = "Email is required";
+            }
+            else
+            {
+                string pattern = @"^(([^<>()[\]\\.,;:\s@""']+(\.[^<>()[\]\\.,;:\s@""']+)*)|("".+""))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$";
+                Regex regex = new Regex(pattern);
+                if (!regex.IsMatch(user.Email))
+                {
+                    errors["email"] = "Email address is not valid";
+                }
+            }
+
+            // check phone
+            if (string.IsNullOrWhiteSpace(user.Phone))
+            {
+                errors["phone"] = "Phone is required";
+            }
+            else
+            {
+                string pattern = @"^(0|\+84)(\s|\.)?((3[2-9])|(5[26-9])|(7[0|6-9])|(8[0-9])|(9[0-9]))(\d){7}$";
+                Regex regex = new Regex(pattern);
+                if (!regex.IsMatch(user.Phone))
+                {
+                    errors["phone"] = "Invalid phone number";
+                }
+            }
+
+            // check DateOfBirth 
+            if (string.IsNullOrWhiteSpace(user.DateOfBirth))
+            {
+                errors["dateOfBirth"] = "Date of Birth is required";
+            }
+            else
+            {
+                try
+                {
+                    var formatDate = DateTime.Parse(user.DateOfBirth);
+                    if (formatDate >= DateTime.Now.Date)
+                    {
+                        errors["dateOfBirth"] = "Date of Birth cannot be in the future";
+                    }
+                }
+                catch (FormatException)
+                {
+                    errors["dateOfBirth"] = "Invalid Date of Birth format";
+                }
+            }
+
+            if (errors.Count > 0)
+            {
+                return BadRequest(new
+                {
+                    Success = false,
+                    Errors = errors,
+                    Message = "Invalid user information! Please check the errors of the fields again."
+                });
+            }
+
+            var result = await userRepo.EditUser(user);
+
+            if (!result)
+            {
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message = "Edit user failed!"
+                });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "User edited successfully!"
+            });
+        }
     }
 }
