@@ -160,6 +160,34 @@ namespace Server.Repositories
             return (true, "Disable account user successfully!");
         }
 
+        public async Task<bool> UpdateUser(int userId, UpdateUserDto updatedUser)
+        {
+            var user = await db.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(updatedUser.Phone))
+            {
+                user.Phone = updatedUser.Phone;
+            }
+
+            if (!string.IsNullOrEmpty(updatedUser.Email))
+            {
+                user.Email = updatedUser.Email;
+            }
+
+            if (!string.IsNullOrEmpty(updatedUser.Address))
+            {
+                user.Address = updatedUser.Address;
+            }
+
+            await db.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<bool> EditUser(UserEditDto user)
         {
             var findUser = await db.Users.FirstOrDefaultAsync(u => u.Id ==  user.Id);
@@ -196,5 +224,7 @@ namespace Server.Repositories
 
             return true;
         }
+
+
     }
 }
