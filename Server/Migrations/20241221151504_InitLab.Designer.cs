@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server.Data;
 
@@ -11,9 +12,11 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241221151504_InitLab")]
+    partial class InitLab
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,11 +25,7 @@ namespace Server.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-
             modelBuilder.Entity("Server.Models.Lab", b =>
-
-            modelBuilder.Entity("Server.Models.Class", b =>
-
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -38,18 +37,12 @@ namespace Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
 
                     b.HasKey("Id");
 
                     b.ToTable("Labs");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Classes");
-
                 });
 
             modelBuilder.Entity("Server.Models.User", b =>
@@ -115,11 +108,7 @@ namespace Server.Migrations
                             FullName = "Administrator",
                             Gender = "Other",
                             IsActive = true,
-
                             Password = "$2a$12$8CqTImNSYu9.QRd9f63os.jMqmxXSaYlaEMdQqBJCJbZwnVqU/3Sm",
-
-                            Password = "$2a$12$38Wai4VdFn3GErXDAoXP/.25ZHHYwn9BPSlECUco5wTVj4td1bIFS",
-
                             Role = "Admin",
                             Username = "admin"
                         });
