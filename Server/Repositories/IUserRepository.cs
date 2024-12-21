@@ -11,5 +11,6 @@ namespace Server.Repositories
         Task<bool> CreateUser(UserCreateDto user);
         Task<bool> CheckUsernameExists(string username);
         Task<(bool success, string message)> DisableUser(int Id);
+        Task<bool> UpdateUser(int userId, UpdateUserDto updatedUser);
     }
 }
