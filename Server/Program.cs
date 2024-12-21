@@ -51,7 +51,7 @@ builder.Services.AddScoped<TokenService>();
 
 // Repo
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
+builder.Services.AddScoped<IClassRepository, ClassRepository>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

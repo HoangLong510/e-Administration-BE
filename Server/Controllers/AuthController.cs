@@ -192,5 +192,49 @@ namespace Server.Controllers
                 Success = true
             });
         }
+
+        [HttpPut("update-user")]
+        public async Task<ActionResult> UpdateUser(UpdateUserDto userUpdate)
+        {
+            var token = Request.Cookies["token"];
+            if (string.IsNullOrEmpty(token))
+            {
+                return Unauthorized(new { Success = false, Message = "Unauthorized" });
+            }
+
+            var userId = tokenService.GetUserIdFromToken(token);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { Success = false, Message = "Invalid token" });
+            }
+
+            var updateResult = await userRepo.UpdateUser(int.Parse(userId), userUpdate);
+
+            if (!updateResult)
+            {
+                return NotFound(new { Success = false, Message = "User not found" });
+            }
+
+            var updatedUser = await userRepo.GetUserById(int.Parse(userId));
+
+            var updatedUserResponse = new UserResponseDto
+            {
+                Id = updatedUser.Id,
+                Username = updatedUser.Username,
+                FullName = updatedUser.FullName,
+                Email = updatedUser.Email,
+                Phone = updatedUser.Phone,
+                Address = updatedUser.Address,
+                Avatar = updatedUser.Avatar,
+                DateOfBirth = updatedUser.DateOfBirth,
+                Gender = updatedUser.Gender.ToString(),
+                Role = updatedUser.Role.ToString(),
+                IsActive = updatedUser.IsActive
+            };
+
+            return Ok(new { Success = true, User = updatedUserResponse, Message = "Profile updated successfully!" });
+        }
+
+
     }
 }
