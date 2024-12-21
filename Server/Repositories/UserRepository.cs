@@ -49,9 +49,6 @@ namespace Server.Repositories
             var pageSize = 10;
             var users = db.Users.AsQueryable();
 
-            var totalUsers = await users.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
-
             users = users.Where(u => u.IsActive == req.IsActive);
 
             if (!string.IsNullOrEmpty(req.Role))
@@ -72,6 +69,9 @@ namespace Server.Repositories
                 .Skip((req.PageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+
+            var totalUsers = await users.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
 
             var result = new List<UserResponseDto>();
             foreach (var user in pagedUsers)
@@ -133,7 +133,7 @@ namespace Server.Repositories
             }
             catch (ArgumentException)
             {
-                newUser.Role = UserRole.Student;
+                return false;
             }
             db.Users.Add(newUser);
             await db.SaveChangesAsync();
@@ -187,6 +187,44 @@ namespace Server.Repositories
 
             return true;
         }
+
+        public async Task<bool> EditUser(UserEditDto user)
+        {
+            var findUser = await db.Users.FirstOrDefaultAsync(u => u.Id ==  user.Id);
+
+            if (findUser == null)
+            {
+                return false;
+            }
+
+            findUser.FullName = user.FullName;
+            findUser.Email = user.Email;
+            findUser.Phone = user.Phone;
+            findUser.Address = user.Address;
+            findUser.DateOfBirth = DateTime.Parse(user.DateOfBirth);
+            try
+            {
+                findUser.Gender = Enum.Parse<UserGender>(user.Gender, true);
+            }
+            catch (ArgumentException)
+            {
+                findUser.Gender = UserGender.Other;
+            }
+            try
+            {
+                findUser.Role = Enum.Parse<UserRole>(user.Role, true);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+            findUser.IsActive = user.IsActive;
+
+            await db.SaveChangesAsync();
+
+            return true;
+        }
+
 
     }
 }
