@@ -51,6 +51,7 @@ builder.Services.AddScoped<TokenService>();
 
 // Repo
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ILabRepository, LabRepository>();
 
 var app = builder.Build();
 
