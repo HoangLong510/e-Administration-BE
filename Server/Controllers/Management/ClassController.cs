@@ -60,16 +60,27 @@ namespace Server.Controllers
         [HttpPost]
         public async Task<ActionResult> AddClass([FromBody] Class newClass)
         {
-            if (newClass == null)
+            if (newClass == null || string.IsNullOrEmpty(newClass.Name))
             {
                 return BadRequest(new
                 {
                     Success = false,
-                    Message = "Lớp học không hợp lệ."
+                    Message = "Dữ liệu lớp học không hợp lệ."
+                });
+            }
+
+            var exists = await repo.ClassNameExistsAsync(newClass.Name);
+            if (exists)
+            {
+                return Conflict(new
+                {
+                    Success = false,
+                    Message = $"Tên lớp học \"{newClass.Name}\" đã tồn tại."
                 });
             }
 
             await repo.AddClassAsync(newClass);
+
             return CreatedAtAction(nameof(GetClassById), new { id = newClass.Id }, new
             {
                 Success = true,
@@ -77,6 +88,7 @@ namespace Server.Controllers
                 Data = newClass
             });
         }
+
 
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateClass(int id, [FromBody] Class updatedClass)
@@ -131,5 +143,29 @@ namespace Server.Controllers
                 Message = "Lớp học đã được xóa thành công."
             });
         }
+
+        [HttpGet("check-name")]
+        public async Task<ActionResult> CheckClassNameExists([FromQuery] string name)
+        {
+            var exists = await repo.ClassNameExistsAsync(name);
+            if (exists)
+            {
+                return Ok(new
+                {
+                    Success = true,
+                    Exists = true,
+                    Message = $"Class name \"{name}\" already exists."
+                });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Exists = false,
+                Message = $"Class name \"{name}\" is available."
+            });
+        }
+
+
     }
 }

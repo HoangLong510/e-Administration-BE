@@ -163,6 +163,7 @@ namespace Server.Controllers
                 Email = user.Email,
                 Phone = user.Phone,
                 Address = user.Address,
+                ClassId = user.ClassId, 
                 Avatar = user.Avatar,
                 DateOfBirth = user.DateOfBirth,
                 Gender = user.Gender.ToString(),
@@ -194,28 +195,39 @@ namespace Server.Controllers
         }
 
         [HttpPut("update-user")]
-        public async Task<ActionResult> UpdateUser(UpdateUserDto userUpdate)
+        public async Task<ActionResult> UpdateUser([FromForm] UpdateUserDto userUpdate)
         {
+            // Lấy token từ cookies
             var token = Request.Cookies["token"];
             if (string.IsNullOrEmpty(token))
             {
-                return Unauthorized(new { Success = false, Message = "Unauthorized" });
+                return Unauthorized(new { Success = false, Message = "Unauthorized: No token provided" });
             }
 
             var userId = tokenService.GetUserIdFromToken(token);
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int parsedUserId))
             {
-                return Unauthorized(new { Success = false, Message = "Invalid token" });
+                return Unauthorized(new { Success = false, Message = "Unauthorized: Invalid token" });
             }
 
-            var updateResult = await userRepo.UpdateUser(int.Parse(userId), userUpdate);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { Success = false, Message = "Bad Request: Invalid data provided" });
+            }
 
-            if (!updateResult)
+            var existingUser = await userRepo.GetUserById(parsedUserId);
+            if (existingUser == null)
             {
                 return NotFound(new { Success = false, Message = "User not found" });
             }
 
-            var updatedUser = await userRepo.GetUserById(int.Parse(userId));
+            var updateResult = await userRepo.UpdateUser(parsedUserId, userUpdate);
+            if (!updateResult)
+            {
+                return StatusCode(500, new { Success = false, Message = "Error occurred while updating the user" });
+            }
+
+            var updatedUser = await userRepo.GetUserById(parsedUserId);
 
             var updatedUserResponse = new UserResponseDto
             {
