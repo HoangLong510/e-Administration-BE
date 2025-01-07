@@ -166,6 +166,27 @@ namespace Server.Controllers
             });
         }
 
+        [HttpGet("{id}/users")]
+        public async Task<ActionResult> GetUsersByClassId(int id)
+        {
+            var users = await repo.GetUsersByClassIdAsync(id);
+            if (users == null || users.Count == 0)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Không tìm thấy người dùng trong lớp học này."
+                });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Lấy danh sách người dùng của lớp học thành công.",
+                Data = users
+            });
+        }
+
 
     }
 }

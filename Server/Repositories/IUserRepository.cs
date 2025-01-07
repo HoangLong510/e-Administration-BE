@@ -14,5 +14,7 @@ namespace Server.Repositories
 
         Task<bool> UpdateUser(int userId, UpdateUserDto updatedUser);
         Task<bool> EditUser(UserEditDto user);
+        Task<bool> ChangePassword(int userId, string newPasswordHash);
+        Task<int> GetTotalUsersAsync();
     }
 }

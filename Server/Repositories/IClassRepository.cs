@@ -12,5 +12,7 @@ namespace Server.Repositories
         Task DeleteClassAsync(int id);
         Task<(IEnumerable<Class> Classes, int TotalCount)> GetPagedClassesAsync(string search, int page, int pageSize);
         Task<bool> ClassNameExistsAsync(string className);
+
+        Task<List<User>> GetUsersByClassIdAsync(int classId);
     }
 }
