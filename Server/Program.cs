@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Server.Data;
 using Server.Repositories;
@@ -50,6 +51,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddScoped<TokenService>();
 
 // Repo
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<ILabRepository, LabRepository>();
@@ -60,6 +63,15 @@ builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
 var app = builder.Build();
 
+app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Data", "Uploads")),
+    RequestPath = "/uploads"
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -69,7 +81,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AppClient");
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

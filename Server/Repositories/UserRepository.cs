@@ -168,6 +168,7 @@ namespace Server.Repositories
                 return false;
             }
 
+            // Cập nhật thông tin người dùng
             if (!string.IsNullOrEmpty(updatedUser.Phone))
             {
                 user.Phone = updatedUser.Phone;
@@ -183,10 +184,60 @@ namespace Server.Repositories
                 user.Address = updatedUser.Address;
             }
 
+            // Xử lý avatar
+            if (updatedUser.Avatar != null)
+            {
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Uploads");
+
+                if (!Directory.Exists(uploadDir))
+                {
+                    Directory.CreateDirectory(uploadDir);
+                }
+
+                var originalFileName = Path.GetFileName(updatedUser.Avatar.FileName);
+                var filePath = Path.Combine(uploadDir, originalFileName);
+
+                if (File.Exists(filePath))
+                {
+                    user.Avatar = originalFileName;
+                }
+                else
+                {
+                    var uniqueFileName = $"{Guid.NewGuid()}_{originalFileName}";
+                    var uniqueFilePath = Path.Combine(uploadDir, uniqueFileName);
+
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(user.Avatar))
+                        {
+                            var oldAvatarPath = Path.Combine(uploadDir, user.Avatar);
+                            if (File.Exists(oldAvatarPath))
+                            {
+                                File.Delete(oldAvatarPath);
+                            }
+                        }
+
+                        using (var stream = new FileStream(uniqueFilePath, FileMode.Create))
+                        {
+                            await updatedUser.Avatar.CopyToAsync(stream);
+                        }
+
+                        user.Avatar = uniqueFileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        return false;
+                    }
+                }
+            }
+
             await db.SaveChangesAsync();
 
             return true;
         }
+
+
+
 
         public async Task<bool> EditUser(UserEditDto user)
         {
@@ -225,6 +276,31 @@ namespace Server.Repositories
             return true;
         }
 
+        public async Task<bool> ChangePassword(int userId, string newPasswordHash)
+        {
+            var user = await db.Users.FindAsync(userId);
 
+            if (user == null)
+                return false;
+
+            user.Password = newPasswordHash;
+
+            db.Users.Update(user);
+            return await db.SaveChangesAsync() > 0;
+        }
+
+
+        public async Task<int> GetTotalUsersAsync()
+        {
+            try
+            {
+                var totalUsers = await db.Users.CountAsync(u => u.IsActive); 
+                return totalUsers;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while fetching the total users.", ex);
+            }
+        }
     }
 }

@@ -70,5 +70,18 @@ namespace Server.Repositories
                 await db.SaveChangesAsync();
             }
         }
+
+        public async Task<bool> ClassNameExistsAsync(string className)
+        {
+            return await db.Classes.AnyAsync(c => c.Name == className);
+        }
+
+        public async Task<List<User>> GetUsersByClassIdAsync(int classId)
+        {
+            return await db.Users
+                                 .Where(u => u.ClassId == classId && u.IsActive)
+                                 .ToListAsync();
+        }
+
     }
 }

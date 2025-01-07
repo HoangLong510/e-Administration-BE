@@ -20,10 +20,16 @@ namespace Server.Data
         public DbSet<Class> Classes { get; set; }
         public DbSet<Department> Departments { get; set; }
 
-
+        public DbSet<Report> Reports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>()
+                .HasOne<Class>()
+                .WithMany(c => c.Users)
+                .HasForeignKey(u => u.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Configures the "Role" property of the "User" entity similarly, ensuring that the UserRole enum is stored as a string in the database.
             modelBuilder.Entity<User>()
