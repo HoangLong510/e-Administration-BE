@@ -18,6 +18,7 @@ namespace Server.Data
         public DbSet<Lab> Labs { get; set; }
 
         public DbSet<Class> Classes { get; set; }
+        public DbSet<Department> Departments { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -56,6 +56,8 @@ builder.Services.AddScoped<ILabRepository, LabRepository>();
 
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
 
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
