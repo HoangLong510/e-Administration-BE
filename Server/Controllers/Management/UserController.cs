@@ -378,5 +378,21 @@ namespace Server.Controllers.Management
                 Message = "User edited successfully!"
             });
         }
+
+
+        [HttpGet("total-users")]
+        public async Task<IActionResult> GetTotalUsers()
+        {
+            try
+            {
+                var totalUsers = await userRepo.GetTotalUsersAsync();
+                return Ok(new { success = true, totalUsers });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
     }
 }

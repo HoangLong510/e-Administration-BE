@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Server.DTOs.User;
 using Server.Repositories;
 using Server.Services;
+using Server.Utils;
 
 namespace Server.Controllers
 {
@@ -197,7 +199,6 @@ namespace Server.Controllers
         [HttpPut("update-user")]
         public async Task<ActionResult> UpdateUser([FromForm] UpdateUserDto userUpdate)
         {
-            // Lấy token từ cookies
             var token = Request.Cookies["token"];
             if (string.IsNullOrEmpty(token))
             {
@@ -247,6 +248,79 @@ namespace Server.Controllers
             return Ok(new { Success = true, User = updatedUserResponse, Message = "Profile updated successfully!" });
         }
 
+        [HttpPost("change-password")]
+        public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
+        {
+            var errors = new Dictionary<string, string>();
+
+            if (string.IsNullOrWhiteSpace(changePasswordDto.OldPassword))
+            {
+                errors["oldPassword"] = "Old password is required";
+            }
+
+            if (string.IsNullOrWhiteSpace(changePasswordDto.NewPassword))
+            {
+                errors["newPassword"] = "New password is required";
+            }
+
+            if (changePasswordDto.NewPassword.Length < 6)
+            {
+                errors["newPassword"] = "New password must be at least 6 characters.";
+            }
+
+            if (changePasswordDto.NewPassword != changePasswordDto.ConfirmPassword)
+            {
+                errors["confirmPassword"] = "Confirm password does not match new password";
+            }
+
+            if (errors.Count > 0)
+            {
+                return BadRequest(new
+                {
+                    Success = false,
+                    Errors = errors,
+                    Message = "Invalid password change request. Please check the errors."
+                });
+            }
+
+            var token = Request.Cookies["token"];
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return Unauthorized(new { Success = false, Message = "Unauthorized. Please log in again." });
+            }
+
+            var userId = tokenService.GetUserIdFromToken(token);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { Success = false, Message = "Invalid user or expired token." });
+            }
+
+            var user = await userRepo.GetUserById(int.Parse(userId));
+
+            if (user == null)
+            {
+                return Unauthorized(new { Success = false, Message = "User not found." });
+            }
+
+            if (!PasswordHasher.VerifyPassword(changePasswordDto.OldPassword, user.Password))
+            {
+                return Unauthorized(new { Success = false, Message = "Old password is incorrect." });
+            }
+
+            var newPasswordHash = PasswordHasher.HashPassword(changePasswordDto.NewPassword);
+            var updateSuccess = await userRepo.ChangePassword(user.Id, newPasswordHash);
+
+            if (updateSuccess)
+            {
+                return Ok(new { Success = true, Message = "Password changed successfully." });
+            }
+            else
+            {
+                return StatusCode(500, new { Success = false, Message = "An error occurred while changing password." });
+            }
+        }
 
     }
 }
