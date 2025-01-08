@@ -79,9 +79,16 @@ namespace Server.Controllers
         }
 
         [HttpGet("list")]
-        public async Task<IActionResult> GetReportsByUserId([FromQuery] int senderId, [FromQuery] ReportTitle? category = null)
+        public async Task<IActionResult> GetReportsByUserId(
+            [FromQuery] int senderId,
+            [FromQuery] ReportTitle? category = null,
+            [FromQuery] ReportStatus? status = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var reports = await _reportRepo.GetReportsBySenderIdAsync(senderId, category);
+            var reports = await _reportRepo.GetReportsBySenderIdAsync(senderId, category, status, page, pageSize);
+            var totalCount = await _reportRepo.GetReportsCountBySenderAsync(senderId, category, status);
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
 
             var response = reports.Select(report => new
             {
@@ -95,11 +102,24 @@ namespace Server.Controllers
                 report.CreationTime,
                 report.LastUpdated
             });
-            return Ok(new { Success = true, Data = response });
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Reports retrieved successfully!",
+                Data = response,
+                TotalCount = totalCount,
+                TotalPages = totalPages
+            });
         }
 
+
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllReports([FromQuery] ReportTitle? category = null)
+        public async Task<IActionResult> GetAllReports(
+            [FromQuery] ReportTitle? category = null,
+            [FromQuery] ReportStatus? status = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
             var token = Request.Cookies["token"];
 
@@ -123,8 +143,9 @@ namespace Server.Controllers
                 });
             }
 
-            var reports = await _reportRepo.GetAllReportsAsync(category);
-
+            var reports = await _reportRepo.GetAllReportsAsync(category, status, page, pageSize);
+            var totalCount = await _reportRepo.GetReportsCountAsync(category, status);
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
             var response = reports.Select(report => new
             {
                 report.Id,
@@ -142,29 +163,36 @@ namespace Server.Controllers
             {
                 Success = true,
                 Message = "Reports retrieved successfully!",
-                Data = response
+                Data = response,
+                TotalCount = totalCount,
+                TotalPages = totalPages
             });
         }
-
-
-
 
 
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateReportStatus(int id, [FromBody] ReportStatus status)
         {
+            if (!Enum.IsDefined(typeof(ReportStatus), status))
+            {
+                return BadRequest(new { Success = false, Message = "Invalid status value" });
+            }
+
             var updatedReport = await _reportRepo.UpdateReportStatusAsync(id, status);
             if (updatedReport == null)
+            {
                 return NotFound(new { Success = false, Message = "Report not found" });
+            }
 
-            return Ok(new { Success = true, Message = "Report status updated successfully", Data = updatedReport });
+            return Ok(new { Success = true, Data = updatedReport });
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReport(int id)
+
+        [HttpGet("totalreportPending")]
+        public async Task<IActionResult> GetTotalPendingReports()
         {
-            await _reportRepo.DeleteReportAsync(id);
-            return Ok(new { Success = true, Message = "Report deleted successfully" });
+            var totalPending = await _reportRepo.GetTotalPendingReportsAsync();
+            return Ok(new { Success = true, TotalPending = totalPending });
         }
 
     }

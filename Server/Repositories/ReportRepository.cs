@@ -56,8 +56,26 @@ namespace Server.Repositories
                 .Include(r => r.Sender)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
+        public async Task<int> GetReportsCountBySenderAsync(int senderId, ReportTitle? category = null, ReportStatus? status = null)
+        {
+            var query = _context.Reports.AsQueryable();
 
-        public async Task<List<Report>> GetAllReportsAsync(ReportTitle? category = null)
+            query = query.Where(r => r.SenderId == senderId);
+
+            if (category.HasValue)
+            {
+                query = query.Where(r => r.Title == category.Value);
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(r => r.Status == status.Value);
+            }
+
+            return await query.CountAsync();
+        }
+
+        public async Task<List<Report>> GetAllReportsAsync(ReportTitle? category = null, ReportStatus? status = null, int page = 1, int pageSize = 10)
         {
             var query = _context.Reports.AsQueryable();
 
@@ -66,10 +84,20 @@ namespace Server.Repositories
                 query = query.Where(r => r.Title == category.Value);
             }
 
-            return await query.Include(r => r.Sender).ToListAsync();
+            if (status.HasValue)
+            {
+                query = query.Where(r => r.Status == status.Value);
+            }
+
+            return await query
+                .Include(r => r.Sender)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
         }
 
-        public async Task<List<Report>> GetReportsBySenderIdAsync(int senderId , ReportTitle? category = null)
+
+        public async Task<List<Report>> GetReportsBySenderIdAsync(int senderId, ReportTitle? category = null, ReportStatus? status = null, int page = 1, int pageSize = 10)
         {
             var query = _context.Reports.Where(r => r.SenderId == senderId);
 
@@ -78,16 +106,35 @@ namespace Server.Repositories
                 query = query.Where(r => r.Title == category.Value);
             }
 
-            return await query.Include(r => r.Sender).ToListAsync();
-        }
+            if (status.HasValue)
+            {
+                query = query.Where(r => r.Status == status.Value);
+            }
 
-
-        public async Task<List<Report>> GetReportsByStatusAsync(ReportStatus status)
-        {
-            return await _context.Reports
-                .Where(r => r.Status == status)
+            return await query
+                .Include(r => r.Sender)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
         }
+
+        public async Task<int> GetReportsCountAsync(ReportTitle? category = null, ReportStatus? status = null)
+        {
+            var query = _context.Reports.AsQueryable();
+
+            if (category.HasValue)
+            {
+                query = query.Where(report => report.Title == category.Value);
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(report => report.Status == status.Value);
+            }
+
+            return await query.CountAsync();
+        }
+
 
         public async Task<Report> UpdateReportStatusAsync(int id, ReportStatus status)
         {
@@ -95,20 +142,17 @@ namespace Server.Repositories
             if (report != null)
             {
                 report.Status = status;
-                report.LastUpdated = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
             return report;
         }
 
-        public async Task DeleteReportAsync(int id)
+
+        public async Task<int> GetTotalPendingReportsAsync()
         {
-            var report = await _context.Reports.FindAsync(id);
-            if (report != null)
-            {
-                _context.Reports.Remove(report);
-                await _context.SaveChangesAsync();
-            }
+            return await _context.Reports
+                .CountAsync(r => r.Status == ReportStatus.Pending);
         }
+
     }
 }

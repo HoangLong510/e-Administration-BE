@@ -9,11 +9,13 @@ namespace Server.Repositories
         Task<Report> CreateReportAsync(Report report, List<IFormFile> images);
 
         Task<Report> GetReportByIdAsync(int id);
-        Task<List<Report>> GetReportsBySenderIdAsync(int senderId , ReportTitle? category = null);
-        Task<List<Report>> GetReportsByStatusAsync(ReportStatus status);
+        Task<List<Report>> GetReportsBySenderIdAsync(int senderId, ReportTitle? category = null, ReportStatus? status = null, int page = 1, int pageSize = 10);
         Task<Report> UpdateReportStatusAsync(int id, ReportStatus status);
-        Task DeleteReportAsync(int id);
 
-        Task<List<Report>> GetAllReportsAsync(ReportTitle? category = null);
+        Task<List<Report>> GetAllReportsAsync(ReportTitle? category = null, ReportStatus? status = null, int page = 1, int pageSize = 10);
+        Task<int> GetReportsCountAsync(ReportTitle? category = null, ReportStatus? status = null);
+        Task<int> GetReportsCountBySenderAsync(int senderId, ReportTitle? category = null, ReportStatus? status = null);
+        Task<int> GetTotalPendingReportsAsync();
+
     }
 }
