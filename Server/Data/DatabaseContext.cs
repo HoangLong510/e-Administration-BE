@@ -31,6 +31,12 @@ namespace Server.Data
                 .HasForeignKey(u => u.ClassId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<User>()
+                .HasOne<Department>()
+                .WithMany(c => c.Users)
+                .HasForeignKey(u => u.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Configures the "Role" property of the "User" entity similarly, ensuring that the UserRole enum is stored as a string in the database.
             modelBuilder.Entity<User>()
                 .Property(u => u.Role)

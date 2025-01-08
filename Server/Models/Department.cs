@@ -13,5 +13,7 @@ namespace Server.Models
         public int Hod { get; set; } // User ID
 
         public string Description { get; set; }
+
+        public ICollection<User> Users { get; set; }
     }
 }
