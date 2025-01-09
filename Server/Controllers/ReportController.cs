@@ -14,12 +14,13 @@ namespace Server.Controllers
         private readonly IReportRepository _reportRepo;
         private readonly IUserRepository _userRepo;
         private readonly TokenService _tokenService;
-
-        public ReportController(IReportRepository reportRepo, IUserRepository userRepo, TokenService tokenService)
+        private readonly ICommentRepository _commentRepo;
+        public ReportController(IReportRepository reportRepo, IUserRepository userRepo, TokenService tokenService , ICommentRepository commentRepo)
         {
             _reportRepo = reportRepo;
             _userRepo = userRepo;
             _tokenService = tokenService;
+            _commentRepo = commentRepo;
         }
 
         [HttpPost]
@@ -71,12 +72,44 @@ namespace Server.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetReport(int id)
         {
-            var report = await _reportRepo.GetReportByIdAsync(id);
-            if (report == null)
-                return NotFound(new { Success = false, Message = "Report not found" });
+            try
+            {
+                var report = await _reportRepo.GetReportByIdAsync(id);
+                if (report == null)
+                    return NotFound(new { Success = false, Message = "Report not found" });
 
-            return Ok(new { Success = true, Data = report });
+                var comments = await _commentRepo.GetCommentsByReportIdAsync(id);
+                return Ok(new
+                {
+                    Success = true,
+                    Data = new
+                    {
+                        report.Id,
+                        report.Title,
+                        report.Content,
+                        report.Status,
+                        report.Images,
+                        report.SenderId,
+                        SenderFullName = report.Sender?.FullName,
+                        report.CreationTime,
+                        report.LastUpdated,
+                        Comments = comments.Select(c => new
+                        {
+                            c.Id,
+                            c.UserId,
+                            UserFullName = c.User?.FullName,
+                            c.Content,
+                            c.CreationTime
+                        })
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "An error occurred while processing your request" });
+            }
         }
+
 
         [HttpGet("list")]
         public async Task<IActionResult> GetReportsByUserId(
@@ -110,6 +143,47 @@ namespace Server.Controllers
                 Data = response,
                 TotalCount = totalCount,
                 TotalPages = totalPages
+            });
+        }
+
+        [HttpPost("{reportId}/comment")]
+        public async Task<IActionResult> CreateComment(int reportId, [FromBody] Comment comment)
+        {
+            if (comment == null)
+                return BadRequest(new { Success = false, Message = "Invalid comment data" });
+
+            if (comment.UserId == 0)
+                return BadRequest(new { Success = false, Message = "UserId is required" });
+
+            if (reportId == 0)
+                return BadRequest(new { Success = false, Message = "ReportId is required" });
+
+            var sender = await _userRepo.GetUserById(comment.UserId);
+            if (sender == null)
+                return NotFound(new { Success = false, Message = "Sender not found" });
+
+            var report = await _reportRepo.GetReportByIdAsync(reportId);
+            if (report == null)
+                return NotFound(new { Success = false, Message = "Report not found" });
+
+            comment.ReportId = reportId;
+            comment.UserId = sender.Id;
+
+            var createdComment = await _commentRepo.CreateCommentAsync(comment);
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Comment created successfully",
+                Data = new
+                {
+                    createdComment.Id,
+                    createdComment.UserId,
+                    createdComment.ReportId,
+                    UserFullName = createdComment.User?.FullName,
+                    createdComment.Content,
+                    createdComment.CreationTime
+                }
             });
         }
 
@@ -193,6 +267,25 @@ namespace Server.Controllers
         {
             var totalPending = await _reportRepo.GetTotalPendingReportsAsync();
             return Ok(new { Success = true, TotalPending = totalPending });
+        }
+
+
+        [HttpGet("monthly")]
+        public async Task<IActionResult> GetReportsByMonth([FromQuery] int year)
+        {
+            if (year <= 0)
+            {
+                return BadRequest(new { Success = false, Message = "Invalid year" });
+            }
+
+            var reportsByMonth = await _reportRepo.GetReportsCountByYearAsync(year);
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Reports retrieved successfully!",
+                Data = reportsByMonth
+            });
         }
 
     }

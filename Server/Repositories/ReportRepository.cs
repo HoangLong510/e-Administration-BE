@@ -113,6 +113,7 @@ namespace Server.Repositories
 
             return await query
                 .Include(r => r.Sender)
+                .Include(r => r.Comments)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -152,6 +153,22 @@ namespace Server.Repositories
         {
             return await _context.Reports
                 .CountAsync(r => r.Status == ReportStatus.Pending);
+        }
+
+        public async Task<List<int>> GetReportsCountByYearAsync(int year)
+        {
+            var reportsByMonth = new List<int>();
+
+            for (int month = 1; month <= 12; month++)
+            {
+                var count = await _context.Reports
+                    .Where(r => r.CreationTime.Year == year && r.CreationTime.Month == month)
+                    .CountAsync();
+
+                reportsByMonth.Add(count);
+            }
+
+            return reportsByMonth;
         }
 
     }

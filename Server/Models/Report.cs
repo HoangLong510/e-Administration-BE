@@ -15,5 +15,7 @@ namespace Server.Models
         public User Sender { get; set; }
         public DateTime CreationTime { get; set; } = DateTime.UtcNow;
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
+
+        public List<Comment> Comments { get; set; }
     }
 }
