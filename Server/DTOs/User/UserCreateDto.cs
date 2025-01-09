@@ -12,5 +12,7 @@
         public string? DateOfBirth { get; set; }
         public string Gender { get; set; }
         public string Role { get; set; }
+        public int? ClassId { get; set; }
+        public int? DepartmentId { get; set; }
     }
 }

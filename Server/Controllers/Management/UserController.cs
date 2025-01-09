@@ -177,6 +177,24 @@ namespace Server.Controllers.Management
                 }
             }
 
+            // check ClassId
+            if(user.ClassId != null)
+            {
+                if(user.Role != "Student")
+                {
+                    user.ClassId = null;
+                }
+            }
+
+            // check DepartmentId
+            if (user.DepartmentId != null)
+            {
+                if (user.Role != "Instructor" && user.Role != "HOD" && user.Role != "TechnicalStaff")
+                {
+                    user.DepartmentId = null;
+                }
+            }
+
             if (errors.Count > 0)
             {
                 return BadRequest(new
@@ -348,6 +366,24 @@ namespace Server.Controllers.Management
                 catch (FormatException)
                 {
                     errors["dateOfBirth"] = "Invalid Date of Birth format";
+                }
+            }
+
+            // check ClassId
+            if (user.ClassId != null)
+            {
+                if (user.Role != "Student")
+                {
+                    user.ClassId = null;
+                }
+            }
+
+            // check DepartmentId
+            if (user.DepartmentId != null)
+            {
+                if (user.Role != "Instructor" && user.Role != "HOD" && user.Role != "TechnicalStaff")
+                {
+                    user.DepartmentId = null;
                 }
             }
 
