@@ -93,7 +93,7 @@ namespace Server.Controllers.Management
                     var checkUsername = await userRepo.CheckUsernameExists(user.Username);
                     if (checkUsername)
                     {
-                        errors["email"] = "Email already exists";
+                        errors["username"] = "Username already exists";
                     }
                 }
             }
@@ -174,6 +174,24 @@ namespace Server.Controllers.Management
                 catch (FormatException)
                 {
                     errors["dateOfBirth"] = "Invalid Date of Birth format";
+                }
+            }
+
+            // check ClassId
+            if(user.ClassId != 0)
+            {
+                if(user.Role != "Student")
+                {
+                    user.ClassId = 0;
+                }
+            }
+
+            // check DepartmentId
+            if (user.DepartmentId != 0)
+            {
+                if (user.Role != "Instructor" && user.Role != "HOD" && user.Role != "TechnicalStaff")
+                {
+                    user.DepartmentId = 0;
                 }
             }
 
@@ -351,6 +369,24 @@ namespace Server.Controllers.Management
                 }
             }
 
+            // check ClassId
+            if (user.ClassId != 0)
+            {
+                if (user.Role != "Student")
+                {
+                    user.ClassId = 0;
+                }
+            }
+
+            // check DepartmentId
+            if (user.DepartmentId != 0)
+            {
+                if (user.Role != "Instructor" && user.Role != "HOD" && user.Role != "TechnicalStaff")
+                {
+                    user.DepartmentId = 0;
+                }
+            }
+
             if (errors.Count > 0)
             {
                 return BadRequest(new
@@ -378,5 +414,21 @@ namespace Server.Controllers.Management
                 Message = "User edited successfully!"
             });
         }
+
+
+        [HttpGet("total-users")]
+        public async Task<IActionResult> GetTotalUsers()
+        {
+            try
+            {
+                var totalUsers = await userRepo.GetTotalUsersAsync();
+                return Ok(new { success = true, totalUsers });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
     }
 }

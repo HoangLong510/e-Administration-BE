@@ -117,8 +117,27 @@ namespace Server.Repositories
                 Email = user.Email,
                 Phone = user.Phone,
                 Address = user.Address,
-                DateOfBirth = DateTime.Parse(user.DateOfBirth),
+                DateOfBirth = DateTime.Parse(user.DateOfBirth)
             };
+
+            if (user.ClassId != 0)
+            {
+                newUser.ClassId = user.ClassId;
+            }
+            else
+            {
+                newUser.ClassId = null;
+            }
+
+            if (user.DepartmentId != 0)
+            {
+                newUser.DepartmentId = user.DepartmentId;
+            }
+            else
+            {
+                newUser.DepartmentId = null;
+            }
+
             try
             {
                 newUser.Gender = Enum.Parse<UserGender>(user.Gender, true);
@@ -236,9 +255,6 @@ namespace Server.Repositories
             return true;
         }
 
-
-
-
         public async Task<bool> EditUser(UserEditDto user)
         {
             var findUser = await db.Users.FirstOrDefaultAsync(u => u.Id ==  user.Id);
@@ -253,6 +269,24 @@ namespace Server.Repositories
             findUser.Phone = user.Phone;
             findUser.Address = user.Address;
             findUser.DateOfBirth = DateTime.Parse(user.DateOfBirth);
+            if(user.DepartmentId != 0)
+            {
+                findUser.DepartmentId = user.DepartmentId;
+            }
+            else
+            {
+                findUser.DepartmentId = null;
+            }
+
+            if(user.ClassId != 0)
+            {
+                findUser.ClassId = user.ClassId;
+            }
+            else
+            {
+                findUser.ClassId = null;
+            }
+
             try
             {
                 findUser.Gender = Enum.Parse<UserGender>(user.Gender, true);
@@ -276,6 +310,31 @@ namespace Server.Repositories
             return true;
         }
 
+        public async Task<bool> ChangePassword(int userId, string newPasswordHash)
+        {
+            var user = await db.Users.FindAsync(userId);
 
+            if (user == null)
+                return false;
+
+            user.Password = newPasswordHash;
+
+            db.Users.Update(user);
+            return await db.SaveChangesAsync() > 0;
+        }
+
+
+        public async Task<int> GetTotalUsersAsync()
+        {
+            try
+            {
+                var totalUsers = await db.Users.CountAsync(u => u.IsActive); 
+                return totalUsers;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while fetching the total users.", ex);
+            }
+        }
     }
 }

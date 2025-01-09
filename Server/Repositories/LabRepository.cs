@@ -78,5 +78,19 @@ namespace Server.Repositories
             await db.SaveChangesAsync();
             return true;
         }
+
+        public async Task<(int ActiveCount, int InactiveCount)> GetLabsStatusSummaryAsync()
+        {
+            try
+            {
+                int activeCount = await db.Labs.CountAsync(l => l.Status == true);
+                int inactiveCount = await db.Labs.CountAsync(l => l.Status == false);
+                return (activeCount, inactiveCount);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

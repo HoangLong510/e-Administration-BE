@@ -2,15 +2,18 @@
 
 namespace Server.Models
 {
-    public class Lab
+    public class Department
     {
-        [Key]
         public int Id { get; set; }
 
         [Required]
         public string Name { get; set; }
 
         [Required]
-        public bool Status { get; set; }
+        public int Hod { get; set; } // User ID
+
+        public string Description { get; set; }
+
+        public ICollection<User>? Users { get; set; }
     }
 }

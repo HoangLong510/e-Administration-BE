@@ -20,7 +20,14 @@
   </ItemGroup>
 
   <ItemGroup>
+
+
     <Folder Include="Data\Uploads\" />
+
+
+    <Folder Include="Data\Uploads\" />
+
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>
