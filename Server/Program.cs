@@ -61,6 +61,8 @@ builder.Services.AddScoped<ILabRepository, LabRepository>();
 
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
 
+builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
+
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
 var app = builder.Build();
