@@ -19,7 +19,9 @@ namespace Server.Data
 
         public DbSet<Class> Classes { get; set; }
 
+        public DbSet<Schedule> Schedules { get; set; }
 
+        public DbSet<Document> Documents { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -45,6 +47,7 @@ namespace Server.Data
                    Role = UserRole.Admin
                }
             );
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
