@@ -118,6 +118,8 @@ namespace Server.Repositories
                 Phone = user.Phone,
                 Address = user.Address,
                 DateOfBirth = DateTime.Parse(user.DateOfBirth),
+                DepartmentId = user.DepartmentId,
+                ClassId = user.ClassId
             };
             try
             {
@@ -253,6 +255,8 @@ namespace Server.Repositories
             findUser.Phone = user.Phone;
             findUser.Address = user.Address;
             findUser.DateOfBirth = DateTime.Parse(user.DateOfBirth);
+            findUser.DepartmentId = user.DepartmentId;
+            findUser.ClassId = user.ClassId;
             try
             {
                 findUser.Gender = Enum.Parse<UserGender>(user.Gender, true);
