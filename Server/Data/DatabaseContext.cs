@@ -29,13 +29,15 @@ namespace Server.Data
                 .HasOne<Class>()
                 .WithMany(c => c.Users)
                 .HasForeignKey(u => u.ClassId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             modelBuilder.Entity<User>()
                 .HasOne<Department>()
                 .WithMany(c => c.Users)
                 .HasForeignKey(u => u.DepartmentId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             // Configures the "Role" property of the "User" entity similarly, ensuring that the UserRole enum is stored as a string in the database.
             modelBuilder.Entity<User>()
