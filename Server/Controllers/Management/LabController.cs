@@ -120,5 +120,29 @@ namespace Server.Controllers
             };
             return Ok(new { Success = true, Data = deletedLabDto }); // Bao bọc kết quả trong object với Success = true
         }
+
+        [HttpGet("status-summary")]
+        public async Task<ActionResult> GetLabsStatusSummary()
+        {
+            try
+            {
+                var (activeCount, inactiveCount) = await _labRepository.GetLabsStatusSummaryAsync();
+                return Ok(new
+                {
+                    Success = true,
+                    Data = new
+                    {
+                        ActiveCount = activeCount,
+                        InactiveCount = inactiveCount,
+                        TotalCount = activeCount + inactiveCount
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Failed to get labs status summary: " + ex.Message });
+            }
+        }
+
     }
 }

@@ -11,6 +11,6 @@ namespace Server.Models
         public string Name { get; set; }
 
         [Required]
-        public bool Status { get; set; } // true: In Use, false: Under Maintenance
+        public bool Status { get; set; }
     }
 }

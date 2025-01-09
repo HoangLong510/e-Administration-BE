@@ -24,7 +24,7 @@ namespace Server.Controllers
             return Ok(new
             {
                 Success = true,
-                Message = "Lấy danh sách lớp học thành công.",
+                Message = "Get class list successfully.",
                 Data = result.Classes,
                 Pagination = new
                 {
@@ -46,13 +46,13 @@ namespace Server.Controllers
                 return NotFound(new
                 {
                     Success = false,
-                    Message = "Lớp học không tìm thấy."
+                    Message = "Class not found."
                 });
             }
             return Ok(new
             {
                 Success = true,
-                Message = "Lấy thông tin lớp học thành công.",
+                Message = "Get class information successfully.",
                 Data = cls
             });
         }
@@ -65,7 +65,7 @@ namespace Server.Controllers
                 return BadRequest(new
                 {
                     Success = false,
-                    Message = "Dữ liệu lớp học không hợp lệ."
+                    Message = "Invalid class data."
                 });
             }
 
@@ -75,7 +75,7 @@ namespace Server.Controllers
                 return Conflict(new
                 {
                     Success = false,
-                    Message = $"Tên lớp học \"{newClass.Name}\" đã tồn tại."
+                    Message = $"The class name \"{newClass.Name}\" already exists."
                 });
             }
 
@@ -84,7 +84,7 @@ namespace Server.Controllers
             return CreatedAtAction(nameof(GetClassById), new { id = newClass.Id }, new
             {
                 Success = true,
-                Message = "Lớp học đã được thêm thành công.",
+                Message = "The class was added successfully.",
                 Data = newClass
             });
         }
@@ -98,7 +98,7 @@ namespace Server.Controllers
                 return BadRequest(new
                 {
                     Success = false,
-                    Message = "ID không khớp với lớp học."
+                    Message = "ID does not match class."
                 });
             }
 
@@ -108,7 +108,7 @@ namespace Server.Controllers
                 return NotFound(new
                 {
                     Success = false,
-                    Message = "Lớp học không tìm thấy."
+                    Message = "Class not found."
                 });
             }
 
@@ -117,7 +117,7 @@ namespace Server.Controllers
             return Ok(new
             {
                 Success = true,
-                Message = "Lớp học đã được cập nhật thành công.",
+                Message = "The class has been updated successfully.",
                 Data = updatedClass
             });
         }
@@ -132,7 +132,7 @@ namespace Server.Controllers
                 return NotFound(new
                 {
                     Success = false,
-                    Message = "Lớp học không tìm thấy."
+                    Message = "Class not found."
                 });
             }
 
@@ -140,7 +140,7 @@ namespace Server.Controllers
             return Ok(new
             {
                 Success = true,
-                Message = "Lớp học đã được xóa thành công."
+                Message = "The class was successfully deleted."
             });
         }
 
@@ -175,14 +175,14 @@ namespace Server.Controllers
                 return NotFound(new
                 {
                     Success = false,
-                    Message = "Không tìm thấy người dùng trong lớp học này."
+                    Message = "No user found in this class."
                 });
             }
 
             return Ok(new
             {
                 Success = true,
-                Message = "Lấy danh sách người dùng của lớp học thành công.",
+                Message = "Get the class user list successfully.",
                 Data = users
             });
         }

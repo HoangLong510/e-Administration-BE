@@ -16,6 +16,7 @@ namespace Server.Repositories
         Task<int> GetReportsCountAsync(ReportTitle? category = null, ReportStatus? status = null);
         Task<int> GetReportsCountBySenderAsync(int senderId, ReportTitle? category = null, ReportStatus? status = null);
         Task<int> GetTotalPendingReportsAsync();
+        Task<List<int>> GetReportsCountByYearAsync(int year);
 
     }
 }

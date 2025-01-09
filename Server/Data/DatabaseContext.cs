@@ -21,6 +21,7 @@ namespace Server.Data
         public DbSet<Department> Departments { get; set; }
 
         public DbSet<Report> Reports { get; set; }
+        public DbSet<Comment> Comments { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -36,6 +37,18 @@ namespace Server.Data
                 .WithMany(c => c.Users)
                 .HasForeignKey(u => u.DepartmentId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Report)
+                .WithMany(r => r.Comments)
+                .HasForeignKey(c => c.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Configures the "Role" property of the "User" entity similarly, ensuring that the UserRole enum is stored as a string in the database.
             modelBuilder.Entity<User>()
