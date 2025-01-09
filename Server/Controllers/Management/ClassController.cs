@@ -36,6 +36,16 @@ namespace Server.Controllers
             });
         }
 
+        [HttpGet("get-all-classes-no-pagination")]
+        public async Task<ActionResult> GetAllClassesNoPagination()
+        {
+            var classes = await repo.GetAllClassesAsync();
+            return Ok(new
+            {
+                Success = true,
+                Data = classes
+            });
+        }
 
         [HttpGet("{id}")]
         public async Task<ActionResult> GetClassById(int id)

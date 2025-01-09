@@ -119,5 +119,16 @@ namespace Server.Controllers
                 return StatusCode(500, new { Success = false, Message = "Failed to delete department: " + ex.Message });
             }
         }
+
+        [HttpGet("get-all-departments-no-pagination")]
+        public async Task<ActionResult> GetAllDepartmentsNoPagination()
+        {
+            var result = await _departmentRepository.GetAllDepartmentsNoPagination();
+            return Ok(new
+            {
+                Success = true,
+                Data = result
+            });
+        }
     }
 }

@@ -93,7 +93,7 @@ namespace Server.Controllers.Management
                     var checkUsername = await userRepo.CheckUsernameExists(user.Username);
                     if (checkUsername)
                     {
-                        errors["email"] = "Email already exists";
+                        errors["username"] = "Username already exists";
                     }
                 }
             }
@@ -178,20 +178,20 @@ namespace Server.Controllers.Management
             }
 
             // check ClassId
-            if(user.ClassId != null)
+            if(user.ClassId != 0)
             {
                 if(user.Role != "Student")
                 {
-                    user.ClassId = null;
+                    user.ClassId = 0;
                 }
             }
 
             // check DepartmentId
-            if (user.DepartmentId != null)
+            if (user.DepartmentId != 0)
             {
                 if (user.Role != "Instructor" && user.Role != "HOD" && user.Role != "TechnicalStaff")
                 {
-                    user.DepartmentId = null;
+                    user.DepartmentId = 0;
                 }
             }
 
@@ -370,20 +370,20 @@ namespace Server.Controllers.Management
             }
 
             // check ClassId
-            if (user.ClassId != null)
+            if (user.ClassId != 0)
             {
                 if (user.Role != "Student")
                 {
-                    user.ClassId = null;
+                    user.ClassId = 0;
                 }
             }
 
             // check DepartmentId
-            if (user.DepartmentId != null)
+            if (user.DepartmentId != 0)
             {
                 if (user.Role != "Instructor" && user.Role != "HOD" && user.Role != "TechnicalStaff")
                 {
-                    user.DepartmentId = null;
+                    user.DepartmentId = 0;
                 }
             }
 

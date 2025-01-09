@@ -86,5 +86,11 @@ namespace Server.Repositories
             await db.SaveChangesAsync();
             return true;
         }
+
+        public async Task<IEnumerable<Department>> GetAllDepartmentsNoPagination()
+        {
+            var departments = await db.Departments.ToListAsync();
+            return departments;
+        }
     }
 }

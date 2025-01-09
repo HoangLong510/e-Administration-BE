@@ -9,5 +9,6 @@ namespace Server.Repositories
         Task<Department> CreateDepartmentAsync(Department department);
         Task<Department> UpdateDepartmentAsync(int id, Department department);
         Task<bool> DeleteDepartmentAsync(int id);
+        Task<IEnumerable<Department>> GetAllDepartmentsNoPagination();
     }
 }
