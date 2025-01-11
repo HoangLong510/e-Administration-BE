@@ -12,5 +12,6 @@ namespace Server.Repositories
         Task<(bool success, string message)> DisableSoftware(int softwareId);
         Task<bool> UpdateSoftware(int softwareId, SoftwareUpdateDto request);
         Task<Software> GetSoftwareById(int softwareId);
+        Task<int> CountExpiredSoftware();
     }
 }

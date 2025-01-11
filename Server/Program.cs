@@ -90,11 +90,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "Data", "upload")),
-    RequestPath = "/Data/Upload"
-});
+
 app.UseCors("AppClient");
 
 app.UseHttpsRedirection();

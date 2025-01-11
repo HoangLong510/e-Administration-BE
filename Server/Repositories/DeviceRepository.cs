@@ -11,7 +11,7 @@ namespace Server.Repositories
     public class DeviceRepository : IDeviceRepository
     {
         private readonly DatabaseContext db;
-        private readonly string _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Data","Upload");
+        private readonly string _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Data","Uploads");
         public DeviceRepository(DatabaseContext db)
         {
             this.db = db;
@@ -26,8 +26,8 @@ namespace Server.Repositories
             using (var stream = new FileStream(filePath, FileMode.Create)) 
             { 
                 await imageFile.CopyToAsync(stream); 
-            } 
-            return Path.Combine("Data", "Upload", fileName); 
+            }
+            return fileName;
         }
         public async Task<Device> GetDeviceById(int deviceId)
         {

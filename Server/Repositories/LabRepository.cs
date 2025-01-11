@@ -79,10 +79,6 @@ namespace Server.Repositories
             await db.SaveChangesAsync();
             return (true, "Lab disabled successfully!");
         }
-    }
-}
-
-      
 
         public async Task<(int ActiveCount, int InactiveCount)> GetLabsStatusSummaryAsync()
         {
@@ -97,6 +93,7 @@ namespace Server.Repositories
                 throw;
             }
         }
+
     }
 }
 

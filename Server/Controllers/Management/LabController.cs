@@ -18,9 +18,6 @@ namespace Server.Controllers
             _labRepository = labRepository;
             this.tokenService = tokenService;
 
-        public LabController(ILabRepository labRepository)
-        {
-            _labRepository = labRepository;
         }
 
         [HttpGet]
