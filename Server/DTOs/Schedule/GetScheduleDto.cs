@@ -10,6 +10,6 @@
         public DateTime EndTime { get; set; }
         public int UserId { get; set; }
         public string FullName { get; set; }
-        public string attachment { get; set; }
+        
     }
 }
