@@ -34,6 +34,14 @@ namespace Server.Repositories
             return null;
         }
 
+        public async Task<List<User>> GetUsersByRoleAsync(UserRole role)
+        {
+            var users = await db.Users
+                                        .Where(u => u.Role == role && u.IsActive)
+                                        .ToListAsync();
+            return users;
+        }
+
         public async Task<User> GetUserById(int userId)
         {
             var user = await db.Users.SingleOrDefaultAsync(u => u.Id == userId);

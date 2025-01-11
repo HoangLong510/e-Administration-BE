@@ -1,5 +1,6 @@
 ﻿using Server.DTOs.User;
 using Server.Models;
+using Server.Models.Enums;
 
 namespace Server.Repositories
 {
@@ -16,5 +17,7 @@ namespace Server.Repositories
         Task<bool> EditUser(UserEditDto user);
         Task<bool> ChangePassword(int userId, string newPasswordHash);
         Task<int> GetTotalUsersAsync();
+
+        Task<List<User>> GetUsersByRoleAsync(UserRole role);
     }
 }
