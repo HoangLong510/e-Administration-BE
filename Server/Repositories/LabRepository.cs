@@ -66,6 +66,7 @@ namespace Server.Repositories
             return existingLab;
         }
 
+
         public async Task<(bool success, string message)> DisableLabAsync(int LabId)
         {
             var lab = await db.Labs.FirstOrDefaultAsync(l => l.Id == LabId);
@@ -80,3 +81,22 @@ namespace Server.Repositories
         }
     }
 }
+
+      
+
+        public async Task<(int ActiveCount, int InactiveCount)> GetLabsStatusSummaryAsync()
+        {
+            try
+            {
+                int activeCount = await db.Labs.CountAsync(l => l.Status == true);
+                int inactiveCount = await db.Labs.CountAsync(l => l.Status == false);
+                return (activeCount, inactiveCount);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+    }
+}
+

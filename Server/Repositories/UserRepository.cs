@@ -53,9 +53,6 @@ namespace Server.Repositories
 
             var users = db.Users.AsQueryable();
 
-            var totalUsers = await users.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
-
             users = users.Where(u => u.IsActive == req.IsActive);
 
             if (!string.IsNullOrEmpty(req.Role))
@@ -76,6 +73,9 @@ namespace Server.Repositories
                 .Skip((pageNumber - 1) * pageSize)  // Ensure pageNumber is valid
                 .Take(pageSize)
                 .ToListAsync();
+
+            var totalUsers = await users.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
 
             var result = new List<UserResponseDto>();
             foreach (var user in pagedUsers)
@@ -121,8 +121,27 @@ namespace Server.Repositories
                 Email = user.Email,
                 Phone = user.Phone,
                 Address = user.Address,
-                DateOfBirth = DateTime.Parse(user.DateOfBirth),
+                DateOfBirth = DateTime.Parse(user.DateOfBirth)
             };
+
+            if (user.ClassId != 0)
+            {
+                newUser.ClassId = user.ClassId;
+            }
+            else
+            {
+                newUser.ClassId = null;
+            }
+
+            if (user.DepartmentId != 0)
+            {
+                newUser.DepartmentId = user.DepartmentId;
+            }
+            else
+            {
+                newUser.DepartmentId = null;
+            }
+
             try
             {
                 newUser.Gender = Enum.Parse<UserGender>(user.Gender, true);
@@ -137,7 +156,7 @@ namespace Server.Repositories
             }
             catch (ArgumentException)
             {
-                newUser.Role = UserRole.Student;
+                return false;
             }
             db.Users.Add(newUser);
             await db.SaveChangesAsync();
@@ -162,6 +181,164 @@ namespace Server.Repositories
             await db.SaveChangesAsync();
 
             return (true, "Disable account user successfully!");
+        }
+
+        public async Task<bool> UpdateUser(int userId, UpdateUserDto updatedUser)
+        {
+            var user = await db.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            // Cập nhật thông tin người dùng
+            if (!string.IsNullOrEmpty(updatedUser.Phone))
+            {
+                user.Phone = updatedUser.Phone;
+            }
+
+            if (!string.IsNullOrEmpty(updatedUser.Email))
+            {
+                user.Email = updatedUser.Email;
+            }
+
+            if (!string.IsNullOrEmpty(updatedUser.Address))
+            {
+                user.Address = updatedUser.Address;
+            }
+
+            // Xử lý avatar
+            if (updatedUser.Avatar != null)
+            {
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Uploads");
+
+                if (!Directory.Exists(uploadDir))
+                {
+                    Directory.CreateDirectory(uploadDir);
+                }
+
+                var originalFileName = Path.GetFileName(updatedUser.Avatar.FileName);
+                var filePath = Path.Combine(uploadDir, originalFileName);
+
+                if (File.Exists(filePath))
+                {
+                    user.Avatar = originalFileName;
+                }
+                else
+                {
+                    var uniqueFileName = $"{Guid.NewGuid()}_{originalFileName}";
+                    var uniqueFilePath = Path.Combine(uploadDir, uniqueFileName);
+
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(user.Avatar))
+                        {
+                            var oldAvatarPath = Path.Combine(uploadDir, user.Avatar);
+                            if (File.Exists(oldAvatarPath))
+                            {
+                                File.Delete(oldAvatarPath);
+                            }
+                        }
+
+                        using (var stream = new FileStream(uniqueFilePath, FileMode.Create))
+                        {
+                            await updatedUser.Avatar.CopyToAsync(stream);
+                        }
+
+                        user.Avatar = uniqueFileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            await db.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> EditUser(UserEditDto user)
+        {
+            var findUser = await db.Users.FirstOrDefaultAsync(u => u.Id ==  user.Id);
+
+            if (findUser == null)
+            {
+                return false;
+            }
+
+            findUser.FullName = user.FullName;
+            findUser.Email = user.Email;
+            findUser.Phone = user.Phone;
+            findUser.Address = user.Address;
+            findUser.DateOfBirth = DateTime.Parse(user.DateOfBirth);
+            if(user.DepartmentId != 0)
+            {
+                findUser.DepartmentId = user.DepartmentId;
+            }
+            else
+            {
+                findUser.DepartmentId = null;
+            }
+
+            if(user.ClassId != 0)
+            {
+                findUser.ClassId = user.ClassId;
+            }
+            else
+            {
+                findUser.ClassId = null;
+            }
+
+            try
+            {
+                findUser.Gender = Enum.Parse<UserGender>(user.Gender, true);
+            }
+            catch (ArgumentException)
+            {
+                findUser.Gender = UserGender.Other;
+            }
+            try
+            {
+                findUser.Role = Enum.Parse<UserRole>(user.Role, true);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+            findUser.IsActive = user.IsActive;
+
+            await db.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> ChangePassword(int userId, string newPasswordHash)
+        {
+            var user = await db.Users.FindAsync(userId);
+
+            if (user == null)
+                return false;
+
+            user.Password = newPasswordHash;
+
+            db.Users.Update(user);
+            return await db.SaveChangesAsync() > 0;
+        }
+
+
+        public async Task<int> GetTotalUsersAsync()
+        {
+            try
+            {
+                var totalUsers = await db.Users.CountAsync(u => u.IsActive); 
+                return totalUsers;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while fetching the total users.", ex);
+            }
         }
     }
 }

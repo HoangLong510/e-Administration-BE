@@ -16,11 +16,45 @@ namespace Server.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Device> Devices { get; set; }
         public DbSet<Software> Softwares { get; set; }
-        public DbSet<Lab> Labs { get; set; } 
+        public DbSet<Lab> Labs { get; set; }
+        public DbSet<Class> Classes { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<Document> Documents { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>()
+                .HasOne<Class>()
+                .WithMany(c => c.Users)
+                .HasForeignKey(u => u.ClassId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            modelBuilder.Entity<User>()
+                .HasOne<Department>()
+                .WithMany(c => c.Users)
+                .HasForeignKey(u => u.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Report)
+                .WithMany(r => r.Comments)
+                .HasForeignKey(c => c.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Configures the "Role" property of the "User" entity similarly, ensuring that the UserRole enum is stored as a string in the database.
             modelBuilder.Entity<User>()
@@ -54,6 +88,7 @@ namespace Server.Data
                    Role = UserRole.Admin
                }
             );
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

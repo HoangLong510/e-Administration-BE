@@ -51,12 +51,37 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddScoped<TokenService>();
 
 // Repo
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<ISoftwareRepository, SoftwareRepository>();
 builder.Services.AddScoped<ILabDeviceRepository, LabDeviceRepository>();
+
+
+
 builder.Services.AddScoped<ILabRepository, LabRepository>();
+
+builder.Services.AddScoped<IClassRepository, ClassRepository>();
+
+builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
+
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+
+
 var app = builder.Build();
+
+app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Data", "Uploads")),
+    RequestPath = "/uploads"
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -71,7 +96,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseCors("AppClient");
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
