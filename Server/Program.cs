@@ -57,6 +57,12 @@ builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
+builder.Services.AddScoped<ISoftwareRepository, SoftwareRepository>();
+builder.Services.AddScoped<ILabDeviceRepository, LabDeviceRepository>();
+
+
+
 builder.Services.AddScoped<ILabRepository, LabRepository>();
 
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
@@ -64,6 +70,7 @@ builder.Services.AddScoped<IClassRepository, ClassRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+
 
 var app = builder.Build();
 
@@ -81,7 +88,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "Data", "upload")),
+    RequestPath = "/Data/Upload"
+});
 app.UseCors("AppClient");
 
 app.UseHttpsRedirection();

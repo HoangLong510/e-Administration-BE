@@ -47,6 +47,10 @@ namespace Server.Repositories
         public async Task<(List<UserResponseDto> users, int totalPages)> GetUsers(GetUsersRequestDto req)
         {
             var pageSize = 10;
+
+            // Ensure PageNumber is at least 1 to prevent negative or zero values
+            var pageNumber = Math.Max(1, req.PageNumber);
+
             var users = db.Users.AsQueryable();
 
             users = users.Where(u => u.IsActive == req.IsActive);
@@ -58,7 +62,7 @@ namespace Server.Repositories
 
             if (!string.IsNullOrEmpty(req.SearchValue))
             {
-                string searchValueLower = req.SearchValue.ToLower(); // Chuyển đổi chuỗi tìm kiếm về chữ thường
+                string searchValueLower = req.SearchValue.ToLower();
                 users = users.Where(u => u.FullName.ToLower().Contains(searchValueLower) ||
                                         u.Username.ToLower().Contains(searchValueLower) ||
                                         u.Email.ToLower().Contains(searchValueLower) ||
@@ -66,7 +70,7 @@ namespace Server.Repositories
             }
 
             var pagedUsers = await users
-                .Skip((req.PageNumber - 1) * pageSize)
+                .Skip((pageNumber - 1) * pageSize)  // Ensure pageNumber is valid
                 .Take(pageSize)
                 .ToListAsync();
 

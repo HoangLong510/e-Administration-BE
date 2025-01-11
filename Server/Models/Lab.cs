@@ -12,5 +12,11 @@ namespace Server.Models
 
         [Required]
         public bool Status { get; set; }
+
+
+        public ICollection<Device>? Devices { get; set; }
+        public ICollection<Software>? Softwares { get; set; }
+
+
     }
 }

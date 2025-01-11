@@ -14,6 +14,8 @@ namespace Server.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Device> Devices { get; set; }
+        public DbSet<Software> Softwares { get; set; }
         public DbSet<Lab> Labs { get; set; }
         public DbSet<Class> Classes { get; set; }
         public DbSet<Department> Departments { get; set; }
@@ -23,6 +25,7 @@ namespace Server.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -62,6 +65,17 @@ namespace Server.Data
             modelBuilder.Entity<User>()
                 .Property(u => u.Gender)
                 .HasConversion(new EnumToStringConverter<UserGender>());
+
+            // Thiết lập khóa ngoại cho Device và Software liên kết với Lab
+            modelBuilder.Entity<Device>()
+                .HasOne<Lab>(d => d.Lab)
+                .WithMany(l => l.Devices)
+                .HasForeignKey(d => d.LabId); // Thay đổi từ RoomId thành LabID
+
+            modelBuilder.Entity<Software>()
+                .HasOne<Lab>(s => s.Lab)
+                .WithMany(l => l.Softwares)
+                .HasForeignKey(s => s.LabId); // Thay đổi từ RoomId thành LabID
 
             // Seeding data for User table
             modelBuilder.Entity<User>().HasData(
