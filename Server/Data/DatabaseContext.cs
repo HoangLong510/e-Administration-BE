@@ -21,7 +21,8 @@ namespace Server.Data
         public DbSet<Document> Documents { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Comment> Comments { get; set; }
-        
+        public DbSet<Tasks> Tasks { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -52,6 +53,12 @@ namespace Server.Data
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Tasks>()
+                .HasOne(t => t.Assignees)
+                .WithMany()
+                .HasForeignKey(t => t.AssigneesId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Configures the "Role" property of the "User" entity similarly, ensuring that the UserRole enum is stored as a string in the database.
             modelBuilder.Entity<User>()
                 .Property(u => u.Role)
@@ -61,6 +68,11 @@ namespace Server.Data
             modelBuilder.Entity<User>()
                 .Property(u => u.Gender)
                 .HasConversion(new EnumToStringConverter<UserGender>());
+
+            // Configures the "Status" property of the "Task" entity similarly, ensuring that the TaskStatusEnum enum is stored as a string in the database.
+            modelBuilder.Entity<Tasks>()
+                .Property(t => t.Status)
+                .HasConversion(new EnumToStringConverter<TaskStatusEnum>());
 
             // Seeding data for User table
             modelBuilder.Entity<User>().HasData(

@@ -65,6 +65,8 @@ builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+
 var app = builder.Build();
 
 app.UseStaticFiles();

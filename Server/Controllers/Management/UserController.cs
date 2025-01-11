@@ -429,6 +429,17 @@ namespace Server.Controllers.Management
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+        
+        [HttpGet("get-user-for-task-assignees")]
+        public async Task<ActionResult> GetUserForTaskAssignees()
+        {
+            var users = await userRepo.GetUserForTaskAssignees();
 
+            return Ok(new
+            {
+                Success = true,
+                Data = users
+            });
+        }
     }
 }
