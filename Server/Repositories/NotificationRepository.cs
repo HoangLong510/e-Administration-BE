@@ -6,17 +6,29 @@ namespace Server.Repositories
 {
     public class NotificationRepository : INotificationRepository
     {
-        public Task<bool> CreateNotiReportAsync(int ReportId, Notification notification)
+        private readonly DatabaseContext db;
+        public NotificationRepository(DatabaseContext db)
         {
-            throw new NotImplementedException();
+            this.db = db;
+        }
+        public async Task<bool> CreateNotiReportAsync(Notification notification)
+        {
+            db.Notifications.Add(notification);
+            var result = await db.SaveChangesAsync();
+            return result > 0;
         }
 
-        public Task<bool> CreateNotiTaskAsync(int TaskId, Notification notification)
+        public Task<bool> CreateNotiTaskAsync(Notification notification)
         {
             throw new NotImplementedException();
         }
 
         public Task<List<Notification>> ListNotiAsync(int userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> MarkAsViewedAsync(int notificationId)
         {
             throw new NotImplementedException();
         }
