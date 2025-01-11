@@ -23,14 +23,29 @@ namespace Server.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<List<Notification>> ListNotiAsync(int userId)
+        public async Task<(List<Notification> Notifications, int UnreadCount)> ListNotiAsync(int userId)
         {
-            throw new NotImplementedException();
+            var unreadCount = await db.Notifications.CountAsync(n => !n.Viewed);
+            var notifications = await db.Notifications
+             .Where(n => n.ReceiverId == userId)
+             .OrderByDescending(n => n.CreatedAt)
+             .ToListAsync();
+            return (notifications, unreadCount);
         }
 
-        public Task<bool> MarkAsViewedAsync(int notificationId)
+        public async Task<bool> MarkNotificationAsReadAsync(int notificationId)
         {
-            throw new NotImplementedException();
+            var notification = await db.Notifications.FirstOrDefaultAsync(n => n.Id == notificationId);
+            if (notification == null)
+            {
+                return false; // Không tìm thấy thông báo
+            }
+
+            notification.Viewed = true; // Cập nhật trạng thái thành đã xem
+            db.Notifications.Update(notification);
+            await db.SaveChangesAsync();
+
+            return true; // Trả về thành công
         }
-    }
+    }  
 }
