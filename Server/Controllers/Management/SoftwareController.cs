@@ -278,5 +278,28 @@ namespace Server.Controllers
             });
         }
 
+        [HttpGet("count-expired-softwares")]
+        public async Task<ActionResult> CountExpiredSoftwares()
+        {
+            try
+            {
+                var count = await softwareRepo.CountExpiredSoftware();
+
+                return Ok(new
+                {
+                    Success = true,
+                    Count = count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = $"An error occurred while counting expired software: {ex.Message}"
+                });
+            }
+        }
+
     }
 }

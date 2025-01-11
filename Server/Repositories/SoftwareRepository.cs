@@ -118,5 +118,17 @@ namespace Server.Repositories
             await db.SaveChangesAsync();
             return true;
         }
+
+        public async Task<int> CountExpiredSoftware()
+        {
+            var currentDate = DateTime.Now.Date;
+            var count = await db.Softwares
+                .Where(s => s.LicenseExpire.HasValue &&
+                            s.Status == true &&
+                            s.LicenseExpire.Value >= currentDate &&
+                            s.LicenseExpire.Value <= currentDate.AddDays(30)) 
+                .CountAsync();
+            return count;
+        }
     }
 }
