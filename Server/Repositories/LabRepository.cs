@@ -66,17 +66,18 @@ namespace Server.Repositories
             return existingLab;
         }
 
-        public async Task<bool> DeleteLabAsync(int id)
+
+        public async Task<(bool success, string message)> DisableLabAsync(int LabId)
         {
-            var lab = await db.Labs.FindAsync(id);
+            var lab = await db.Labs.FirstOrDefaultAsync(l => l.Id == LabId);
             if (lab == null)
             {
-                return false; // Hoặc throw exception
+                return (false, "Lab does not exist!");
             }
 
-            db.Labs.Remove(lab);
+            lab.Status = false;
             await db.SaveChangesAsync();
-            return true;
+            return (true, "Lab disabled successfully!");
         }
 
         public async Task<(int ActiveCount, int InactiveCount)> GetLabsStatusSummaryAsync()
@@ -92,5 +93,7 @@ namespace Server.Repositories
                 throw;
             }
         }
+
     }
 }
+

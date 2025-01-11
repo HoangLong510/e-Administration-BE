@@ -17,7 +17,14 @@ namespace Server.Repositories
 
         public async Task<IEnumerable<Schedule>> GetAllSchedulesAsync()
         {
-            return await db.Schedules.ToListAsync();
+
+            var scheduleList = await (from s in db.Schedules
+                                      join l in db.Labs on s.Lab equals l.Name
+                                      where l.Status == true
+                                      select s)
+                                     .ToListAsync();
+
+            return scheduleList;
         }
 
         public async Task<IEnumerable<Schedule>> GetSchedulesByUserIdAsync(int userId)
@@ -58,8 +65,9 @@ namespace Server.Repositories
 
         public async Task<Schedule> GetScheduleByIdAsync(int id)
         {
-            return await db.Schedules
-                .FirstOrDefaultAsync(s => s.Id == id);
+            var schedule = await db.Schedules
+                 .FirstOrDefaultAsync(s => s.Id == id);
+            return schedule;
         }
 
         public async Task CreateScheduleAsync(Schedule schedule)
@@ -97,13 +105,49 @@ namespace Server.Repositories
                 .FindAsync(id);
             return classUser;
         }
-        public async Task<Document> CreateDocumentAsync(Document document)
+        public async Task<IEnumerable<Class>> GetAllClassAsync()
         {
-
-            await db.Documents.AddAsync(document);
-            await db.SaveChangesAsync();
-
-            return document;
+            return await db.Classes.ToListAsync();
         }
+        public async Task<IEnumerable<Lab>> GetAllLabAsync()
+        {
+            return await db.Labs.ToListAsync();
+        }
+        public async Task<IEnumerable<GetScheduleDto>> GetScheduleByConditionAsync(string Name, string Lab)
+        {
+            // Query to join schedules and users
+            var query = from schedule in db.Schedules
+                        join user in db.Users on schedule.UserId equals user.Id
+                        select new { schedule, user };
+
+            // Filter by FullName
+            if (!string.IsNullOrEmpty(Name))
+            {
+                query = query.Where(x => x.user.FullName.Contains(Name));
+            }
+
+            // Filter by Lab
+            if (!string.IsNullOrEmpty(Lab))
+            {
+                query = query.Where(x => x.schedule.Lab.Contains(Lab));
+            }
+
+            // Select the data into the DTO
+            var result = await query.Select(x => new GetScheduleDto
+            {
+                Id = x.schedule.Id,
+                Course = x.schedule.Course,
+                Lab = x.schedule.Lab,
+                Class = x.schedule.Class,
+                StartTime = x.schedule.StartTime,
+                EndTime = x.schedule.EndTime,
+                UserId = x.schedule.UserId,
+                FullName = x.user.FullName
+            }).ToListAsync();
+
+            return result;
+        }
+
+
     }
 }

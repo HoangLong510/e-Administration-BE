@@ -34,6 +34,14 @@ namespace Server.Repositories
             return null;
         }
 
+        public async Task<List<User>> GetUsersByRoleAsync(UserRole role)
+        {
+            var users = await db.Users
+                                        .Where(u => u.Role == role && u.IsActive)
+                                        .ToListAsync();
+            return users;
+        }
+
         public async Task<User> GetUserById(int userId)
         {
             var user = await db.Users.SingleOrDefaultAsync(u => u.Id == userId);
@@ -47,6 +55,10 @@ namespace Server.Repositories
         public async Task<(List<UserResponseDto> users, int totalPages)> GetUsers(GetUsersRequestDto req)
         {
             var pageSize = 10;
+
+            // Ensure PageNumber is at least 1 to prevent negative or zero values
+            var pageNumber = Math.Max(1, req.PageNumber);
+
             var users = db.Users.AsQueryable();
 
             users = users.Where(u => u.IsActive == req.IsActive);
@@ -66,7 +78,7 @@ namespace Server.Repositories
             }
 
             var pagedUsers = await users
-                .Skip((req.PageNumber - 1) * pageSize)
+                .Skip((pageNumber - 1) * pageSize)  // Ensure pageNumber is valid
                 .Take(pageSize)
                 .ToListAsync();
 

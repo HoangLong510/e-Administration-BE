@@ -14,6 +14,8 @@ namespace Server.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Device> Devices { get; set; }
+        public DbSet<Software> Softwares { get; set; }
         public DbSet<Lab> Labs { get; set; }
         public DbSet<Class> Classes { get; set; }
         public DbSet<Department> Departments { get; set; }
@@ -22,6 +24,7 @@ namespace Server.Data
         public DbSet<Report> Reports { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Tasks> Tasks { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -68,11 +71,22 @@ namespace Server.Data
             modelBuilder.Entity<User>()
                 .Property(u => u.Gender)
                 .HasConversion(new EnumToStringConverter<UserGender>());
-
+                
             // Configures the "Status" property of the "Task" entity similarly, ensuring that the TaskStatusEnum enum is stored as a string in the database.
             modelBuilder.Entity<Tasks>()
                 .Property(t => t.Status)
                 .HasConversion(new EnumToStringConverter<TaskStatusEnum>());
+                
+            // Thiết lập khóa ngoại cho Device và Software liên kết với Lab
+            modelBuilder.Entity<Device>()
+                .HasOne<Lab>(d => d.Lab)
+                .WithMany(l => l.Devices)
+                .HasForeignKey(d => d.LabId);
+
+            modelBuilder.Entity<Software>()
+                .HasOne<Lab>(s => s.Lab)
+                .WithMany(l => l.Softwares)
+                .HasForeignKey(s => s.LabId);
 
             // Seeding data for User table
             modelBuilder.Entity<User>().HasData(

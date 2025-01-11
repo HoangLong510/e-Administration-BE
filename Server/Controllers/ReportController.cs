@@ -15,12 +15,14 @@ namespace Server.Controllers
         private readonly IUserRepository _userRepo;
         private readonly TokenService _tokenService;
         private readonly ICommentRepository _commentRepo;
-        public ReportController(IReportRepository reportRepo, IUserRepository userRepo, TokenService tokenService , ICommentRepository commentRepo)
+        private readonly INotificationRepository _notificationRepo;
+        public ReportController(INotificationRepository notificationRepo, IReportRepository reportRepo, IUserRepository userRepo, TokenService tokenService , ICommentRepository commentRepo)
         {
             _reportRepo = reportRepo;
             _userRepo = userRepo;
             _tokenService = tokenService;
             _commentRepo = commentRepo;
+            _notificationRepo = notificationRepo;
         }
 
         [HttpPost]
@@ -46,6 +48,22 @@ namespace Server.Controllers
             };
 
             var createdReport = await _reportRepo.CreateReportAsync(report, images);
+            var admins = await _userRepo.GetUsersByRoleAsync(UserRole.Admin);
+
+            foreach (var admin in admins)
+            {
+                var notification = new Notification
+                {
+                    SenderId = senderId,
+                    ReceiverId = admin.Id,
+                    Content = $"A new report has been created: {Enum.GetName(typeof(ReportTitle), report.Title)}",
+                    ReportId = createdReport.Id,
+                    ActionType = "NewReport",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _notificationRepo.CreateNotiReportAsync(notification);
+            }
 
             var response = new
             {
@@ -171,6 +189,40 @@ namespace Server.Controllers
 
             var createdComment = await _commentRepo.CreateCommentAsync(comment);
 
+            if (sender.Role == UserRole.Admin)
+            {
+                var notification = new Notification
+                {
+                    SenderId = sender.Id,
+                    ReceiverId = report.SenderId,
+                    Content = $"{sender.FullName} commented on your report: {comment.Content}",
+                    ReportId = reportId,
+                    ActionType = "AdminComment",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _notificationRepo.CreateNotiReportAsync(notification);
+            }
+            else
+            {
+                var admins = await _userRepo.GetUsersByRoleAsync(UserRole.Admin);
+
+                foreach (var admin in admins)
+                {
+                    var notification = new Notification
+                    {
+                        SenderId = sender.Id,
+                        ReceiverId = admin.Id,
+                        Content = $"{sender.FullName} added a comment on their own report: {comment.Content}",
+                        ReportId = reportId,
+                        ActionType = "UserComment",
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _notificationRepo.CreateNotiReportAsync(notification);
+                }
+            }
+
             return Ok(new
             {
                 Success = true,
@@ -247,19 +299,81 @@ namespace Server.Controllers
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateReportStatus(int id, [FromBody] ReportStatus status)
         {
+            var token = Request.Cookies["token"];
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return Unauthorized(new { Success = false, Message = "No token provided." });
+            }
+
+            var userId = _tokenService.GetUserIdFromToken(token);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { Success = false, Message = "Invalid token." });
+            }
+
+            var sender = await _userRepo.GetUserById(int.Parse(userId));
+            if (sender == null)
+            {
+                return Unauthorized(new { Success = false, Message = "User not found." });
+            }
+
             if (!Enum.IsDefined(typeof(ReportStatus), status))
             {
                 return BadRequest(new { Success = false, Message = "Invalid status value" });
             }
 
+            var report = await _reportRepo.GetReportByIdAsync(id);
+            if (report == null)
+            {
+                return NotFound(new { Success = false, Message = "Report not found" });
+            }
+
+            if (report.Status == status)
+            {
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "The report is already in the requested status."
+                });
+            }
+
             var updatedReport = await _reportRepo.UpdateReportStatusAsync(id, status);
+
+            var notification = new Notification
+            {
+                SenderId = sender.Id,
+                ReceiverId = report.SenderId,
+                Content = $"Your report status has been changed to: {Enum.GetName(typeof(ReportStatus), status)}",
+                ReportId = id,
+                ActionType = "StatusChange",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _notificationRepo.CreateNotiReportAsync(notification);
+
             if (updatedReport == null)
             {
                 return NotFound(new { Success = false, Message = "Report not found" });
             }
 
-            return Ok(new { Success = true, Data = updatedReport });
+            return Ok(new
+            {
+                Success = true,
+                Message = "Report status updated and notification sent.",
+                Data = new
+                {
+                    updatedReport.Id,
+                    updatedReport.Title,
+                    updatedReport.Content,
+                    Status = Enum.GetName(typeof(ReportStatus), updatedReport.Status),
+                    updatedReport.SenderId,
+                    updatedReport.LastUpdated
+                }
+            });
         }
+
 
 
         [HttpGet("totalreportPending")]

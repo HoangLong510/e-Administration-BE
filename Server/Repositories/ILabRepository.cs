@@ -8,7 +8,11 @@ namespace Server.Repositories
         Task<Lab> GetLabByIdAsync(int id);
         Task<Lab> CreateLabAsync(Lab lab);
         Task<Lab> UpdateLabAsync(int id, Lab lab);
-        Task<bool> DeleteLabAsync(int id);
+
+        Task<(bool success, string message)> DisableLabAsync(int LabId);
+
+        
         Task<(int ActiveCount, int InactiveCount)> GetLabsStatusSummaryAsync();
+
     }
 }

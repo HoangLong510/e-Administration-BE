@@ -143,6 +143,7 @@ namespace Server.Repositories
             if (report != null)
             {
                 report.Status = status;
+                report.LastUpdated = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
             return report;

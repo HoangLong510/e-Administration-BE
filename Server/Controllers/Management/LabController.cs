@@ -2,6 +2,8 @@
 using Server.DTOs.Lab;
 using Server.Models;
 using Server.Repositories;
+using Server.Services;
+
 
 namespace Server.Controllers
 {
@@ -10,10 +12,12 @@ namespace Server.Controllers
     public class LabController : ControllerBase
     {
         private readonly ILabRepository _labRepository;
-
+        private readonly TokenService tokenService;
         public LabController(ILabRepository labRepository)
         {
             _labRepository = labRepository;
+            this.tokenService = tokenService;
+
         }
 
         [HttpGet]
@@ -96,30 +100,28 @@ namespace Server.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLab(int id)
+        [HttpGet("disable-lab/{id}")]
+        public async Task<ActionResult> DeleteLab(int id)
         {
-            var lab = await _labRepository.GetLabByIdAsync(id);
-            if (lab == null)
-            {
-                return NotFound(new { Success = false, Message = "Lab not found" }); // Trả về NotFound với Success = false
-            }
-
-            var result = await _labRepository.DeleteLabAsync(id);
+            
+            var (result, message ) = await _labRepository.DisableLabAsync(id);
             if (!result)
             {
-                return NotFound(new { Success = false, Message = "Lab not found" }); // Trả về NotFound với Success = false
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message = message
+                });
             }
 
-            // Trả về LabDto chứa thông tin lab vừa xóa
-            var deletedLabDto = new LabDto
+            return Ok(new
             {
-                Id = lab.Id,
-                Name = lab.Name,
-                Status = lab.Status
-            };
-            return Ok(new { Success = true, Data = deletedLabDto }); // Bao bọc kết quả trong object với Success = true
+                Success = true,
+                Message = message
+            });
         }
+
+        
 
         [HttpGet("status-summary")]
         public async Task<ActionResult> GetLabsStatusSummary()

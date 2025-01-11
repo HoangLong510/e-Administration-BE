@@ -23,6 +23,45 @@ namespace Server.Migrations
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
 
+            modelBuilder.Entity("Server.Models.Device", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("LabId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabId");
+
+                    b.ToTable("Devices");
+                });
+
+            modelBuilder.Entity("Server.Models.Lab", b =>
+
             modelBuilder.Entity("Server.Models.Lab", b =>
 
             modelBuilder.Entity("Server.Models.Class", b =>
@@ -46,9 +85,48 @@ namespace Server.Migrations
 
                     b.ToTable("Labs");
 
+                });
+
+            modelBuilder.Entity("Server.Models.Software", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("LabId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LicenseExpire")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabId");
+
+                    b.ToTable("Softwares");
+
+
                     b.HasKey("Id");
 
                     b.ToTable("Classes");
+
 
                 });
 
@@ -116,13 +194,42 @@ namespace Server.Migrations
                             Gender = "Other",
                             IsActive = true,
 
+                            Password = "$2a$12$Zpa4wUPRvXt.6HU.adAh7eS1sW5HLPdKhizajPwA8uWJDT1TTLJN6",
+
+
                             Password = "$2a$12$8CqTImNSYu9.QRd9f63os.jMqmxXSaYlaEMdQqBJCJbZwnVqU/3Sm",
 
                             Password = "$2a$12$38Wai4VdFn3GErXDAoXP/.25ZHHYwn9BPSlECUco5wTVj4td1bIFS",
 
+
                             Role = "Admin",
                             Username = "admin"
                         });
+                });
+
+            modelBuilder.Entity("Server.Models.Device", b =>
+                {
+                    b.HasOne("Server.Models.Lab", "Lab")
+                        .WithMany("Devices")
+                        .HasForeignKey("LabId");
+
+                    b.Navigation("Lab");
+                });
+
+            modelBuilder.Entity("Server.Models.Software", b =>
+                {
+                    b.HasOne("Server.Models.Lab", "Lab")
+                        .WithMany("Softwares")
+                        .HasForeignKey("LabId");
+
+                    b.Navigation("Lab");
+                });
+
+            modelBuilder.Entity("Server.Models.Lab", b =>
+                {
+                    b.Navigation("Devices");
+
+                    b.Navigation("Softwares");
                 });
 #pragma warning restore 612, 618
         }
