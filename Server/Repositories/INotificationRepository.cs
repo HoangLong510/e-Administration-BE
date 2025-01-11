@@ -6,7 +6,7 @@ namespace Server.Repositories
     {
         Task<bool> CreateNotiReportAsync(Notification notification);
         Task<bool> CreateNotiTaskAsync(Notification notification);
-        Task<List<Notification>> ListNotiAsync(int userId);
-        Task<bool> MarkAsViewedAsync(int notificationId);
+        Task<(List<Notification> Notifications ,int UnreadCount)> ListNotiAsync(int userId);
+        Task<bool> MarkNotificationAsReadAsync(int notificationId);
     }
 }
