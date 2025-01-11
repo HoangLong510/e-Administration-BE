@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server.Data;
 
@@ -11,9 +12,11 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241218174148_i")]
+    partial class i
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,16 +37,12 @@ namespace Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Image")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("LabId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("RoomId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
@@ -54,12 +53,12 @@ namespace Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LabId");
+                    b.HasIndex("RoomId");
 
                     b.ToTable("Devices");
                 });
 
-            modelBuilder.Entity("Server.Models.Lab", b =>
+            modelBuilder.Entity("Server.Models.Room", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -76,43 +75,7 @@ namespace Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Labs");
-                });
-
-            modelBuilder.Entity("Server.Models.Software", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("LabId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("LicenseExpire")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LabId");
-
-                    b.ToTable("Softwares");
+                    b.ToTable("Rooms");
                 });
 
             modelBuilder.Entity("Server.Models.User", b =>
@@ -178,7 +141,7 @@ namespace Server.Migrations
                             FullName = "Administrator",
                             Gender = "Other",
                             IsActive = true,
-                            Password = "$2a$12$Zpa4wUPRvXt.6HU.adAh7eS1sW5HLPdKhizajPwA8uWJDT1TTLJN6",
+                            Password = "$2a$12$oQ0Ut2pLEWgH70dYUci50.vGxrXzPyVIN8BC5tYReLoawUyWpL9iu",
                             Role = "Admin",
                             Username = "admin"
                         });
@@ -186,27 +149,16 @@ namespace Server.Migrations
 
             modelBuilder.Entity("Server.Models.Device", b =>
                 {
-                    b.HasOne("Server.Models.Lab", "Lab")
+                    b.HasOne("Server.Models.Room", "Room")
                         .WithMany("Devices")
-                        .HasForeignKey("LabId");
+                        .HasForeignKey("RoomId");
 
-                    b.Navigation("Lab");
+                    b.Navigation("Room");
                 });
 
-            modelBuilder.Entity("Server.Models.Software", b =>
-                {
-                    b.HasOne("Server.Models.Lab", "Lab")
-                        .WithMany("Softwares")
-                        .HasForeignKey("LabId");
-
-                    b.Navigation("Lab");
-                });
-
-            modelBuilder.Entity("Server.Models.Lab", b =>
+            modelBuilder.Entity("Server.Models.Room", b =>
                 {
                     b.Navigation("Devices");
-
-                    b.Navigation("Softwares");
                 });
 #pragma warning restore 612, 618
         }
