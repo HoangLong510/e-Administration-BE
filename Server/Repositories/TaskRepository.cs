@@ -32,6 +32,10 @@ namespace Server.Repositories
             {
                 tasks = tasks.Where(t => t.Status.ToString() == req.Status);
             }
+            else
+            {
+                tasks = tasks.Where(t => t.Status.ToString() != "Canceled");
+            }
 
             if (!string.IsNullOrEmpty(req.SearchValue))
             {
@@ -76,13 +80,41 @@ namespace Server.Repositories
             return (pagedTasks, totalPages);
         }
 
-        public async Task<Tasks> GetTaskById(int taskId)
+        public async Task<TaskResponseDto> GetTaskById(int taskId)
         {
-            var task = await db.Tasks.SingleOrDefaultAsync(t => t.Id == taskId);
-            return task;
+            var task = await db.Tasks.Include(t => t.Assignees).SingleOrDefaultAsync(t => t.Id == taskId);
+            if(task == null)
+            {
+                return null;
+            }
+            return new TaskResponseDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Content = task.Content,
+                Assignees = task.Assignees == null ? null : new UserResponseDto
+                {
+                    Id = task.Assignees.Id,
+                    Username = task.Assignees.Username,
+                    FullName = task.Assignees.FullName,
+                    Email = task.Assignees.Email,
+                    Phone = task.Assignees.Phone,
+                    Address = task.Assignees.Address,
+                    Gender = task.Assignees.Gender.ToString(),
+                    Role = task.Assignees.Role.ToString(),
+                    IsActive = task.Assignees.IsActive,
+                    ClassId = task.Assignees.ClassId,
+                    DepartmentId = task.Assignees.DepartmentId,
+                    Avatar = task.Assignees.Avatar
+                },
+                ReportId = task.ReportId,
+                CreatedAt = task.CreatedAt,
+                ComplatedAt = task.ComplatedAt,
+                Status = task.Status.ToString()
+            };
         }
 
-        public async Task<bool> CreateTask(CreateTaskDTO req)
+        public async Task<Tasks> CreateTask(CreateTaskDTO req)
         {
             var newTask = new Tasks
             {
@@ -95,15 +127,30 @@ namespace Server.Repositories
             db.Tasks.Add(newTask);
             await db.SaveChangesAsync();
 
-            return true;
+            return newTask;
         }
 
-        public async Task<bool> ChangeTaskStatus(int taskId)
+        public async Task<TaskResponseDto> ChangeTaskStatus(int taskId, int userId)
         {
-            var task = await db.Tasks.SingleOrDefaultAsync(t => t.Id == taskId);
+            var task = await db.Tasks.Include(t => t.Assignees).SingleOrDefaultAsync(t => t.Id == taskId);
+            var user = await db.Users.SingleOrDefaultAsync(u => u.Id == userId);
+
             if (task == null)
             {
-                return false;
+                return null;
+            }
+
+            if(user == null)
+            {
+                return null;
+            }
+
+            if(user.Role.ToString() != "Admin")
+            {
+                if(user.Id != task.AssigneesId)
+                {
+                    return null;
+                }
             }
 
             if (task.Status.ToString() == "Pending")
@@ -113,13 +160,119 @@ namespace Server.Repositories
             else if (task.Status.ToString() == "InProgress")
             {
                 task.Status = TaskStatusEnum.Completed;
+                task.ComplatedAt = DateTime.Now;
             }
             else
             {
-                return false;
+                return null;
             }
 
-            return false;
+            await db.SaveChangesAsync();
+
+            return new TaskResponseDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Content = task.Content,
+                Assignees = task.Assignees == null ? null : new UserResponseDto
+                {
+                    Id = task.Assignees.Id,
+                    Username = task.Assignees.Username,
+                    FullName = task.Assignees.FullName,
+                    Email = task.Assignees.Email,
+                    Phone = task.Assignees.Phone,
+                    Address = task.Assignees.Address,
+                    Gender = task.Assignees.Gender.ToString(),
+                    Role = task.Assignees.Role.ToString(),
+                    IsActive = task.Assignees.IsActive,
+                    ClassId = task.Assignees.ClassId,
+                    DepartmentId = task.Assignees.DepartmentId,
+                    Avatar = task.Assignees.Avatar
+                },
+                ReportId = task.ReportId,
+                CreatedAt = task.CreatedAt,
+                ComplatedAt = task.ComplatedAt,
+                Status = task.Status.ToString()
+            };
+        }
+
+        public async Task<TaskResponseDto> CancelTask(int taskId, int userId)
+        {
+            var task = await db.Tasks.Include(t => t.Assignees).SingleOrDefaultAsync(t => t.Id == taskId);
+            var user = await db.Users.SingleOrDefaultAsync(u => u.Id == userId);
+
+            if (task == null)
+            {
+                return null;
+            }
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            if (user.Role.ToString() != "Admin")
+            {
+                return null;
+            }
+
+            task.Status = TaskStatusEnum.Canceled;
+
+            await db.SaveChangesAsync();
+
+            return new TaskResponseDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Content = task.Content,
+                Assignees = task.Assignees == null ? null : new UserResponseDto
+                {
+                    Id = task.Assignees.Id,
+                    Username = task.Assignees.Username,
+                    FullName = task.Assignees.FullName,
+                    Email = task.Assignees.Email,
+                    Phone = task.Assignees.Phone,
+                    Address = task.Assignees.Address,
+                    Gender = task.Assignees.Gender.ToString(),
+                    Role = task.Assignees.Role.ToString(),
+                    IsActive = task.Assignees.IsActive,
+                    ClassId = task.Assignees.ClassId,
+                    DepartmentId = task.Assignees.DepartmentId,
+                    Avatar = task.Assignees.Avatar
+                },
+                ReportId = task.ReportId,
+                CreatedAt = task.CreatedAt,
+                ComplatedAt = task.ComplatedAt,
+                Status = task.Status.ToString()
+            };
+        }
+
+        public async Task<Tasks> EditTask(EditTaskDto req)
+        {
+            var task = await db.Tasks.Include(t => t.Assignees).SingleOrDefaultAsync(t => t.Id == req.Id);
+            if (task == null)
+            {
+                return null;
+            }
+            var user = await db.Users.SingleOrDefaultAsync(u => u.Id == req.UserId);
+
+            if(user == null)
+            {
+                return null;
+            }
+
+            if(user.Role.ToString() != "Admin")
+            {
+                return null;
+            }
+
+            task.Title = req.Title;
+            task.Content = req.Content;
+            task.AssigneesId = req.AssigneesId;
+
+            await db.SaveChangesAsync();
+
+            return task;
         }
 
         public async Task<List<Tasks>> GetTaskByReportId(int reportId)

@@ -6,9 +6,11 @@ namespace Server.Repositories
     public interface ITaskRepository
     {
         Task<(List<TaskResponseDto> tasks, int totalPages)> GetAllTasks(GetAllTasksRequest req);
-        Task<Tasks> GetTaskById(int taskId);
-        Task<bool> CreateTask(CreateTaskDTO req);
-        Task<bool> ChangeTaskStatus(int taskId);
+        Task<TaskResponseDto> GetTaskById(int taskId);
+        Task<Tasks> CreateTask(CreateTaskDTO req);
+        Task<TaskResponseDto> ChangeTaskStatus(int taskId, int userId);
+        Task<TaskResponseDto> CancelTask(int taskId, int userId);
+        Task<Tasks> EditTask(EditTaskDto req);
         Task<List<Tasks>> GetTaskByReportId(int reportId);
     }
 }

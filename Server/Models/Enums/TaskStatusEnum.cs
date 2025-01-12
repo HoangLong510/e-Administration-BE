@@ -2,6 +2,7 @@
 {
     public enum TaskStatusEnum
     {
+        Canceled,
         Pending,
         InProgress,
         Completed

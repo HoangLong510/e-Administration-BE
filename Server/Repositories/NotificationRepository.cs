@@ -18,9 +18,11 @@ namespace Server.Repositories
             return result > 0;
         }
 
-        public Task<bool> CreateNotiTaskAsync(Notification notification)
+        public async Task<bool> CreateNotiTaskAsync(Notification notification)
         {
-            throw new NotImplementedException();
+            db.Notifications.Add(notification);
+            var result = await db.SaveChangesAsync();
+            return result > 0;
         }
 
         public async Task<(List<Notification> Notifications, int UnreadCount)> ListNotiAsync(int userId)
