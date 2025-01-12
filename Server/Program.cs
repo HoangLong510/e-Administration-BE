@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -18,6 +19,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DatabaseContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("MyConnection"));
+
 });
 
 // Cors
@@ -49,6 +51,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 // Service
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<EmailService>();
+
 
 // Repo
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -97,6 +101,10 @@ app.UseCors("AppClient");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHangfireDashboard();
+
+
+
 
 app.MapControllers();
 
