@@ -68,11 +68,6 @@ builder.Services.AddScoped<ILabRepository, LabRepository>();
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-<<<<<<< Updated upstream
-
-
-=======
->>>>>>> Stashed changes
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
