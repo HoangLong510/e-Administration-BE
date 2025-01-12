@@ -58,23 +58,25 @@ namespace Server.Repositories
 
         public async Task<List<LabDeviceResponseDto>> GetLabDevices(GetLabDevicesRequestDto req)
         {
-            var devices = db.Devices.Where(d => d.Status == true && d.LabId == req.LabId).AsQueryable(); // Chỉ lấy dữ liệu có Status là Active và LabId phù hợp
-            var softwares = db.Softwares.Where(s => s.Status == true && s.LabId == req.LabId).AsQueryable(); // Chỉ lấy dữ liệu có Status là Active và LabId phù hợp
-            if (!string.IsNullOrEmpty(req.SearchValue)) 
-            { 
+            var devices = db.Devices.Where(d => d.LabId == req.LabId).AsQueryable();
+            var softwares = db.Softwares.Where(s => s.LabId == req.LabId).AsQueryable();
+
+            if (!string.IsNullOrEmpty(req.SearchValue))
+            {
                 string searchValueLower = req.SearchValue.ToLower();
-                devices = devices.Where(d => d.Name.ToLower().Contains(searchValueLower) || d.Description.ToLower().Contains(searchValueLower) || d.Type.ToLower().Contains(searchValueLower)); 
-                softwares = softwares.Where(s => s.Name.ToLower().Contains(searchValueLower) || s.Description.ToLower().Contains(searchValueLower) || s.Type.ToLower().Contains(searchValueLower)); 
+                devices = devices.Where(d => d.Name.ToLower().Contains(searchValueLower) || d.Description.ToLower().Contains(searchValueLower) || d.Type.ToLower().Contains(searchValueLower));
+                softwares = softwares.Where(s => s.Name.ToLower().Contains(searchValueLower) || s.Description.ToLower().Contains(searchValueLower) || s.Type.ToLower().Contains(searchValueLower));
             }
+
             var deviceList = await devices.Select(d => new LabDeviceResponseDto
             {
                 Id = d.Id,
                 Name = d.Name,
                 Type = d.Type,
                 Description = d.Description,
-                Status = d.Status,
-                LicenseExpire = null, // Devices do not have LicenseExpire
-                IsSoftware = false
+                LicenseExpire = null,
+                IsSoftware = false,
+                Status = d.Status // Include status in the response
             }).ToListAsync();
 
             var softwareList = await softwares.Select(s => new LabDeviceResponseDto
@@ -84,11 +86,13 @@ namespace Server.Repositories
                 Type = s.Type,
                 Description = s.Description,
                 LicenseExpire = s.LicenseExpire.HasValue ? s.LicenseExpire.Value.ToString("yyyy-MM-dd") : null,
-                IsSoftware = true
+                IsSoftware = true,
+                Status = s.Status // Include status in the response
             }).ToListAsync();
 
             return deviceList.Concat(softwareList).ToList();
         }
+
 
         public async Task<bool> AddDevicesToLab(int labId, List<int> deviceIds)
         {
