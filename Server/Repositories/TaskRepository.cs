@@ -126,6 +126,7 @@ namespace Server.Repositories
         {
             return await db.Tasks
                                  .Where(u => u.ReportId == reportId)
+                                 .Include(t => t.Assignees)
                                  .ToListAsync();
         }
     }

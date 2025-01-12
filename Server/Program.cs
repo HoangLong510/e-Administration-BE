@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -105,10 +104,6 @@ app.UseCors("AppClient");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseHangfireDashboard();
-
-
-
 
 app.MapControllers();
 
