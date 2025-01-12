@@ -3,8 +3,9 @@
     public class Document
     {
         public int Id { get; set; }
-        public int scheduleId { get; set; }
-        public string attachment { get; set; }
-
+        public string Name { get; set; }
+        public string FilePath { get; set; }
+        public DateTime UploadDate { get; set; }
+        public bool Status { get; set; }
     }
 }

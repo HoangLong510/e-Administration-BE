@@ -86,7 +86,7 @@ namespace Server.Controllers
         }
 
         [HttpPost("create-software")]
-        public async Task<ActionResult> CreateSoftware( SoftwareCreateDto software)
+        public async Task<ActionResult> CreateSoftware(SoftwareCreateDto software)
         {
             var token = Request.Cookies["token"];
             var role = tokenService.GetRoleFromToken(token);
@@ -101,10 +101,21 @@ namespace Server.Controllers
 
             var errors = new Dictionary<string, string>();
 
+            // Kiểm tra tên phần mềm
             if (string.IsNullOrWhiteSpace(software.Name))
             {
                 errors["name"] = "Name is required";
             }
+            else
+            {
+                var checkName = await softwareRepo.CheckNameExists(software.Name);
+                if (checkName)
+                {
+                    errors["name"] = "Name already exists";
+                }
+            }
+
+            // Kiểm tra ngày License Expire
             if (string.IsNullOrWhiteSpace(software.LicenseExpire))
             {
                 errors["LicenseExpire"] = "License Expire is required";
@@ -114,9 +125,9 @@ namespace Server.Controllers
                 try
                 {
                     var formatDate = DateTime.Parse(software.LicenseExpire);
-                    if (formatDate <= DateTime.Now.Date)
+                    if (formatDate <= DateTime.Now.Date.AddDays(7))
                     {
-                        errors["LicenseExpire"] = "License Expire cannot be in the past";
+                        errors["LicenseExpire"] = "License Expire date must be at least 7 days from today";
                     }
                 }
                 catch (FormatException)
@@ -124,8 +135,8 @@ namespace Server.Controllers
                     errors["LicenseExpire"] = "Invalid License Expire format";
                 }
             }
-            
 
+            // Kiểm tra mô tả
             if (string.IsNullOrWhiteSpace(software.Description))
             {
                 errors["description"] = "Description is required";
@@ -133,13 +144,18 @@ namespace Server.Controllers
 
             if (errors.Count > 0)
             {
-                var errorMessage = "Invalid software information! Please check the errors of the fields again:\n"; foreach (var error in errors) { errorMessage += $"{error.Key}: {error.Value}\n"; }
+                var errorMessage = "Invalid software information! Please check the errors of the fields again:\n";
+                foreach (var error in errors)
+                {
+                    errorMessage += $"{error.Key}: {error.Value}\n";
+                }
                 return BadRequest(new
                 {
                     Success = false,
-                    Errors = errors, 
-                    Message = errorMessage 
-                }); }
+                    Errors = errors,
+                    Message = errorMessage
+                });
+            }
 
             try
             {
@@ -169,6 +185,7 @@ namespace Server.Controllers
                 });
             }
         }
+
 
         [HttpGet("disable-software/{id}")]
         public async Task<ActionResult> DisableSoftware(int id)
@@ -217,10 +234,21 @@ namespace Server.Controllers
 
             var errors = new Dictionary<string, string>();
 
+            // Kiểm tra tên phần mềm
             if (string.IsNullOrWhiteSpace(request.Name))
             {
                 errors["name"] = "Name is required";
             }
+            else
+            {
+                var isUniqueName = await softwareRepo.IsSoftwareNameUnique(request.Name, id);
+                if (!isUniqueName)
+                {
+                    errors["name"] = "Name already exists";
+                }
+            }
+
+            // Kiểm tra ngày License Expire
             if (string.IsNullOrWhiteSpace(request.LicenseExpire))
             {
                 errors["LicenseExpire"] = "License Expire is required";
@@ -230,9 +258,9 @@ namespace Server.Controllers
                 try
                 {
                     var formatDate = DateTime.Parse(request.LicenseExpire);
-                    if (formatDate <= DateTime.Now.Date)
+                    if (formatDate <= DateTime.Now.Date.AddDays(7))
                     {
-                        errors["LicenseExpire"] = "License Expire cannot be in the past";
+                        errors["LicenseExpire"] = "License Expire date must be at least 7 days from today";
                     }
                 }
                 catch (FormatException)
@@ -241,6 +269,7 @@ namespace Server.Controllers
                 }
             }
 
+            // Kiểm tra mô tả
             if (string.IsNullOrWhiteSpace(request.Description))
             {
                 errors["description"] = "Description is required";
@@ -277,6 +306,9 @@ namespace Server.Controllers
                 Message = "Software updated successfully"
             });
         }
+
+
+
 
         [HttpGet("count-expired-softwares")]
         public async Task<ActionResult> CountExpiredSoftwares()

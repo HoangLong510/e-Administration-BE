@@ -113,7 +113,6 @@ namespace Server.Repositories
             software.Description = request.Description;
             software.LicenseExpire = DateTime.Parse(request.LicenseExpire);
             software.Status = request.Status;
-            
 
             await db.SaveChangesAsync();
             return true;
@@ -126,9 +125,20 @@ namespace Server.Repositories
                 .Where(s => s.LicenseExpire.HasValue &&
                             s.Status == true &&
                             s.LicenseExpire.Value >= currentDate &&
-                            s.LicenseExpire.Value <= currentDate.AddDays(30)) 
+                            s.LicenseExpire.Value <= currentDate.AddDays(30))
                 .CountAsync();
             return count;
         }
+
+        public async Task<bool> CheckNameExists(string name)
+        {
+            return await db.Softwares.AnyAsync(s => s.Name == name);
+        }
+
+        public async Task<bool> IsSoftwareNameUnique(string name, int softwareId)
+        {
+            return !(await db.Softwares.AnyAsync(s => s.Name == name && s.Id != softwareId));
+        }
+
     }
 }

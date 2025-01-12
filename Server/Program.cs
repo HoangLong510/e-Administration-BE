@@ -73,6 +73,7 @@ builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 var app = builder.Build();
 

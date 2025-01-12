@@ -200,16 +200,6 @@ namespace Server.Controllers
 
             await scheduleRepository.CreateScheduleAsync(schedule);
 
-            if (!string.IsNullOrEmpty(scheduleDto.attachment))
-            {
-                var document = new Document
-                {
-                    scheduleId = schedule.Id,
-                    attachment = scheduleDto.attachment
-                };
-
-                await scheduleRepository.CreateDocumentAsync(document);
-            }
 
             return CreatedAtAction(nameof(GetScheduleWithUserFullName), new { id = schedule.Id },
                 new { message = "Schedule created successfully.", schedule });
