@@ -56,6 +56,9 @@ builder.Services.AddScoped<EmailService>();
 // Register the background service
 builder.Services.AddHostedService<SoftwareStatusUpdateService>();
 
+// Register the background service
+builder.Services.AddHostedService<SoftwareStatusUpdateService>();
+
 // Repo
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
