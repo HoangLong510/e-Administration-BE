@@ -93,6 +93,17 @@ namespace Server.Repositories
                 throw;
             }
         }
+        public async Task<bool> CheckNameExists(string name)
+        {
+            return await db.Labs.AnyAsync(l => l.Name == name);
+        }
+
+
+        public async Task<bool> IsLabNameUnique(string name, int labId)
+        {
+            return !(await db.Labs.AnyAsync(l => l.Name == name && l.Id != labId));
+        }
+
 
     }
 }

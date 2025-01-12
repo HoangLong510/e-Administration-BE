@@ -125,9 +125,9 @@ namespace Server.Controllers
                 try
                 {
                     var formatDate = DateTime.Parse(software.LicenseExpire);
-                    if (formatDate <= DateTime.Now.Date.AddDays(7))
+                    if (formatDate < DateTime.Now.Date)
                     {
-                        errors["LicenseExpire"] = "License Expire date must be at least 7 days from today";
+                        errors["LicenseExpire"] = "License Expire date cannot be earlier than today";
                     }
                 }
                 catch (FormatException)
@@ -185,6 +185,7 @@ namespace Server.Controllers
                 });
             }
         }
+
 
         [HttpPut("update-software/{id}")]
         public async Task<ActionResult> UpdateSoftware(int id, SoftwareUpdateDto request)
@@ -306,8 +307,6 @@ namespace Server.Controllers
                 });
             }
         }
-
-
 
 
         [HttpGet("disable-software/{id}")]
