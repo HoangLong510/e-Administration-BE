@@ -9,6 +9,7 @@ namespace Server.Models
         public string Name { get; set; }
         public string FilePath { get; set; }
         public DateTime UploadDate { get; set; }
+        public bool Status { get; set; }
 
     }
 }
