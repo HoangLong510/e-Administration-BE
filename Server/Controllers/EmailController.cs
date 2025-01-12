@@ -30,9 +30,9 @@ namespace Server.Controllers
         }
 
         [HttpGet("last")]
-        public async Task<IActionResult> GetLastEmail([FromQuery] string toEmail, [FromQuery] string subject)
+        public async Task<IActionResult> GetLastEmail([FromQuery] string toEmail, [FromQuery] string subject, [FromQuery] string name)
         {
-            var email = await _emailRepository.GetLastEmailAsync(toEmail, subject);
+            var email = await _emailRepository.GetLastEmailAsync(toEmail, subject, name);
 
             if (email == null)
             {
