@@ -6,7 +6,7 @@ namespace Server.Repositories
     {
 
         Task AddEmailAsync(EmailModel emailModel);
-        Task<EmailModel> GetLastEmailAsync(string toEmail, string subject);
+        Task<EmailModel> GetLastEmailAsync(string toEmail, string subject, string name);
         Task<IEnumerable<EmailModel>> UpdateStatusAsync();
         Task<List<string>> GetInstructorEmailsForLabAsync();
         Task SendEmailAsync(string toEmail, string subject, string body);

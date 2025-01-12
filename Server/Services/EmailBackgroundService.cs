@@ -24,7 +24,7 @@ namespace Server.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Email background service started.");
-            _timer = new Timer(SendEmails, null, TimeSpan.Zero, TimeSpan.FromSeconds(60));
+            _timer = new Timer(SendEmails, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
             return Task.CompletedTask;
         }
 

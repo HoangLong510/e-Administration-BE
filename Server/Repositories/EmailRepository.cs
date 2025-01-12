@@ -25,10 +25,10 @@ namespace Server.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<EmailModel> GetLastEmailAsync(string toEmail, string subject)
+        public async Task<EmailModel> GetLastEmailAsync(string toEmail, string subject, string name)
         {
             return await _context.Emails
-                .Where(email => email.ToEmail == toEmail && email.Subject == subject)
+                .Where(email => email.ToEmail == toEmail && email.SoftwareName == name)
                 .OrderByDescending(email => email.SentDate)
                 .FirstOrDefaultAsync();
         }
@@ -112,18 +112,17 @@ namespace Server.Repositories
                     var licenseExpire = software?.LicenseExpire?.ToString("yyyy-MM-dd") ?? "Expire Date";
 
                     var emailBody = $@"
-                    Dear {user?.FullName ?? "User"},
+Dear {user?.FullName ?? "User"},
 
-                    This email is sent from the e-Administration system to inform you that your software license for:
-                    - **Software**: {softwareName}
-                    - **License Expiration Date**: {licenseExpire}
+This email is sent from the e-Administration system to inform you that your software license for:
+ - **Software**: {softwareName}
+ - **License Expiration Date**: {licenseExpire} is about to expire. 
 
-                    is about to expire. Kindly notify the Admin or Technical Support team to take the necessary actions.
+Kindly notify the Admin or Technical Support team to take the necessary actions.
 
-                    Thank you for your attention.
-
-                    Best regards,
-                    e-Administration Team
+Thank you for your attention.
+Best regards,
+e-Administration Team
                     ";
 
                     _emailService.SendEmail(toEmail, subject, emailBody);
@@ -133,6 +132,7 @@ namespace Server.Repositories
                         ToEmail = toEmail,
                         Subject = subject,
                         Body = emailBody,
+                        SoftwareName = softwareName,
                         Status = "sent",
                         SentDate = DateTime.UtcNow
                     };

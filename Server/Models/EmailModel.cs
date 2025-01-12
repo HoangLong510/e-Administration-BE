@@ -9,7 +9,7 @@ namespace Server.Models
         public string ToEmail { get; set; }
         public string Subject { get; set; }
         public string Body { get; set; }
-
+        public string SoftwareName { get; set; }
         public string Status { get; set; }
 
         public DateTime? SentDate { get; set; }
