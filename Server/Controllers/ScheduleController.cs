@@ -59,8 +59,11 @@ namespace Server.Controllers
                     }
 
                     var allSchedules = await scheduleRepository.GetAllSchedulesAsync();
-
-                    var studentSchedules = allSchedules
+                    var query = from schedule in db.Schedules
+                                join Lab in db.Labs on schedule.Lab equals Lab.Name
+                                where Lab.Status == true
+                                select schedule;
+                    var studentSchedules = query
                         .Where(s => s.Class == userClass.Name)
                         .OrderBy(s => s.StartTime)
                         .ToList();
@@ -74,8 +77,14 @@ namespace Server.Controllers
                     {
                         return NotFound("No schedules found for this Instructor.");
                     }
+                    var query = from schedule in db.Schedules
+                                join Lab in db.Labs on schedule.Lab equals Lab.Name
+                                where Lab.Status == true
+                                select schedule;
 
-                    var sortedSchedules = Schedules.OrderBy(s => s.StartTime).ToList();
+                    var sortedSchedules = query
+                                        .OrderBy(s => s.StartTime)
+                                        .ToList();
                     return Ok(sortedSchedules);
                 }
                 else
@@ -295,7 +304,7 @@ namespace Server.Controllers
             {
                 var worksheet = package.Workbook.Worksheets.Add("Schedules");
 
-                worksheet.Cells[1, 1, 1, 6].Merge = true;
+                worksheet.Cells[1, 1, 1, 7].Merge = true;
                 worksheet.Cells[1, 1].Value = "Schedule";
                 worksheet.Cells[1, 1].Style.Font.Bold = true;
                 worksheet.Cells[1, 1].Style.Font.Size = 18;
@@ -312,14 +321,14 @@ namespace Server.Controllers
                 worksheet.Cells[2, 6].Value = "Time";
                 worksheet.Cells[2, 7].Value = "Lecturer";
 
-                worksheet.Cells[2, 1, 2, 6].Style.Font.Bold = true;
-                worksheet.Cells[2, 1, 2, 6].Style.Font.Size = 14;
-                worksheet.Cells[2, 1, 2, 6].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                worksheet.Cells[2, 1, 2, 6].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
-                worksheet.Cells[2, 1, 2, 6].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin, System.Drawing.Color.Black);
+                worksheet.Cells[2, 1, 2, 7].Style.Font.Bold = true;
+                worksheet.Cells[2, 1, 2, 7].Style.Font.Size = 14;
+                worksheet.Cells[2, 1, 2, 7].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                worksheet.Cells[2, 1, 2, 7].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                worksheet.Cells[2, 1, 2, 7].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin, System.Drawing.Color.Black);
 
-                worksheet.Cells[2, 1, 2, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-                worksheet.Cells[2, 1, 2, 6].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                worksheet.Cells[2, 1, 2, 7].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                worksheet.Cells[2, 1, 2, 7].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
 
                 worksheet.Column(1).Width = 7;
                 worksheet.Column(2).Width = 25;
@@ -347,16 +356,16 @@ namespace Server.Controllers
                     worksheet.Cells[row, 6].Value = $"{startTime} - {endTime}";
                     worksheet.Cells[row, 7].Value = fullName;
 
-                    worksheet.Cells[row, 1, row, 6].Style.Font.Size = 14;
-                    worksheet.Cells[row, 1, row, 6].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin, System.Drawing.Color.Black);
+                    worksheet.Cells[row, 1, row, 7].Style.Font.Size = 14;
+                    worksheet.Cells[row, 1, row, 7].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin, System.Drawing.Color.Black);
 
-                    worksheet.Cells[row, 1, row, 6].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-                    worksheet.Cells[row, 1, row, 6].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                    worksheet.Cells[row, 1, row, 7].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[row, 1, row, 7].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
 
                     if (row % 2 == 0)
                     {
-                        worksheet.Cells[row, 1, row, 6].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                        worksheet.Cells[row, 1, row, 6].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightYellow);
+                        worksheet.Cells[row, 1, row, 7].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        worksheet.Cells[row, 1, row, 7].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightYellow);
                     }
 
                     row++;

@@ -13,5 +13,6 @@ namespace Server.Models
         public string Status { get; set; }
 
         public DateTime? SentDate { get; set; }
+
     }
 }

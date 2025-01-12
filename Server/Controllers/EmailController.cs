@@ -1,158 +1,71 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Server.Data;
-using Server.Models.Enums;
+using Server.Repositories;
 using Server.Models;
-using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
-[Route("api/[controller]")]
-[ApiController]
-public class EmailController : ControllerBase
+namespace Server.Controllers
 {
-    private readonly EmailService _emailService;
-    private readonly DatabaseContext db;
-
-    public EmailController(EmailService emailService, DatabaseContext db)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class EmailController : ControllerBase
     {
-        _emailService = emailService;
-        this.db = db;
-    }
+        private readonly IEmailRepository _emailRepository;
 
-    [HttpPost("send")]
-    public IActionResult SendEmail([FromBody] EmailModel emailModel)
-    {
-        if (string.IsNullOrEmpty(emailModel.ToEmail) || string.IsNullOrEmpty(emailModel.Subject) || string.IsNullOrEmpty(emailModel.Body))
+        public EmailController(IEmailRepository emailRepository)
         {
-            return BadRequest("Invalid email data.");
+            _emailRepository = emailRepository;
         }
 
-        try
+        [HttpPost("send")]
+        public async Task<IActionResult> SendEmail([FromBody] EmailModel emailModel)
         {
-            var lastEmail = db.Emails
-                .Where(e => e.ToEmail == emailModel.ToEmail && e.Subject == emailModel.Subject)
-                .OrderByDescending(e => e.SentDate)
-                .FirstOrDefault();
-
-            if (lastEmail != null && lastEmail.SentDate.HasValue && (DateTime.Now - lastEmail.SentDate.Value).Days < 7)
+            if (emailModel == null)
             {
-                return BadRequest("You can only send this email once per week.");
+                return BadRequest("Email data is required");
             }
 
-            _emailService.SendEmail(emailModel.ToEmail, emailModel.Subject, emailModel.Body);
-
-            emailModel.SentDate = DateTime.Now;
-            emailModel.Status = "Sent";
-            db.Emails.Add(emailModel);
-            db.SaveChanges();
-
-            return Ok("Email sent successfully.");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
-
-    [HttpGet("expiring-software")]
-    public List<Software> GetExpiringSoftware()
-    {
-        var currentDate = DateTime.Now;
-        var expirationDate = currentDate.AddMonths(1);
-
-        return db.Softwares
-            .Where(s => s.LicenseExpire.HasValue && s.LicenseExpire.Value <= expirationDate && s.LicenseExpire.Value > currentDate)
-            .ToList();
-    }
-
-    [HttpGet("emails-for-software")]
-    public async Task<List<string>> GetEmailsForSoftware([FromQuery] List<int> softwareIds)
-    {
-        var emails = new List<string>();
-
-        var softwares = await db.Softwares.Where(s => softwareIds.Contains(s.Id)).ToListAsync();
-
-        foreach (var software in softwares)
-        {
-            var lab = await db.Labs.FindAsync(software.LabId);
-
-            if (lab == null)
-            {
-                var instructors = await db.Users
-                    .Where(u => u.Role == UserRole.Instructor)
-                    .ToListAsync();
-
-                emails.AddRange(instructors.Select(i => i.Email));
-            }
-            else
-            {
-                var schedule = await db.Schedules
-                .Where(s => s.Lab == lab.Name && s.StartTime > DateTime.Now)
-                .OrderBy(s => s.StartTime)
-                .FirstOrDefaultAsync();
-
-                if (schedule != null)
-                {
-                    var user = await db.Users.FindAsync(schedule.UserId);
-                    if (user != null)
-                    {
-                        emails.Add(user.Email);
-                    }
-                }
-            }
+            await _emailRepository.SendEmailAsync(emailModel.ToEmail, emailModel.Subject, emailModel.Body);
+            return Ok("Email sent successfully");
         }
 
-        return emails;
-    }
-
-    [HttpPost("send-expiration-notifications")]
-    public async Task<IActionResult> SendExpirationNotifications()
-    {
-        try
+        [HttpGet("last")]
+        public async Task<IActionResult> GetLastEmail([FromQuery] string toEmail, [FromQuery] string subject)
         {
-            var expiringSoftware = GetExpiringSoftware();
-            var emails = await GetEmailsForSoftware(expiringSoftware.Select(s => s.Id).ToList());
+            var email = await _emailRepository.GetLastEmailAsync(toEmail, subject);
 
-            if (emails.Any())
+            if (email == null)
             {
-                foreach (var software in expiringSoftware)
-                {
-                    foreach (var email in emails)
-                    {
-                        var lastEmail = db.Emails
-                            .Where(e => e.ToEmail == email
-                                        && e.Subject == $"Software License Expiration Reminder for {software.Name}"
-                                        && e.SentDate.HasValue)
-                            .OrderByDescending(e => e.SentDate)
-                            .FirstOrDefault();
-
-                        if (lastEmail != null && lastEmail.SentDate.HasValue && (DateTime.Now - lastEmail.SentDate.Value).Days < 7)
-                        {
-                            continue;
-                        }
-
-                        var emailModel = new EmailModel
-                        {
-                            ToEmail = email,
-                            Subject = $"Software License Expiration Reminder for {software.Name}",
-                            Body = $"Your software license for '{software.Name}' is about to expire on {software.LicenseExpire?.ToString("yyyy-MM-dd")}. Please take necessary action.",
-                            SentDate = DateTime.Now,
-                            Status = "Sent"
-                        };
-
-                        _emailService.SendEmail(emailModel.ToEmail, emailModel.Subject, emailModel.Body);
-                        db.Emails.Add(emailModel);
-                        db.SaveChanges();
-                    }
-                }
-
-                await db.SaveChangesAsync();
-                return Ok("Expiration notifications sent successfully.");
+                return NotFound("No email found for the given criteria");
             }
 
-            return NotFound("No expiring software found.");
+            return Ok(email);
         }
-        catch (Exception ex)
+
+        [HttpPost("update-status")]
+        public async Task<IActionResult> UpdateEmailStatus()
         {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
+            var updatedEmails = await _emailRepository.UpdateStatusAsync();
+            return Ok(updatedEmails);
+        }
+
+        [HttpGet("instructor-emails")]
+        public async Task<IActionResult> GetInstructorEmailsForLab()
+        {
+            var emails = await _emailRepository.GetInstructorEmailsForLabAsync();
+            return Ok(emails);
+        }
+
+        [HttpPost("resend")]
+        public async Task<IActionResult> ResendEmailIfNecessary([FromBody] EmailModel emailModel)
+        {
+            if (emailModel == null)
+            {
+                return BadRequest("Email data is required");
+            }
+
+            await _emailRepository.ResendEmailIfNecessaryAsync(emailModel.ToEmail, emailModel.Subject, emailModel.Body);
+            return Ok("Email resent successfully if needed");
         }
     }
 }
