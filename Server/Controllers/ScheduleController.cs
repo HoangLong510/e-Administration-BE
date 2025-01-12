@@ -222,6 +222,7 @@ namespace Server.Controllers
 
             await scheduleRepository.CreateScheduleAsync(schedule);
 
+
             return CreatedAtAction(nameof(GetScheduleWithUserFullName), new { id = schedule.Id },
                 new { message = "Schedule created successfully.", schedule });
         }

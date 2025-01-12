@@ -11,5 +11,6 @@ namespace Server.Repositories
         Task<TaskResponseDto> ChangeTaskStatus(int taskId, int userId);
         Task<TaskResponseDto> CancelTask(int taskId, int userId);
         Task<Tasks> EditTask(EditTaskDto req);
+        Task<List<Tasks>> GetTaskByReportId(int reportId);
     }
 }

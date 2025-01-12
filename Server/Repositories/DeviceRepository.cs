@@ -11,24 +11,30 @@ namespace Server.Repositories
     public class DeviceRepository : IDeviceRepository
     {
         private readonly DatabaseContext db;
-        private readonly string _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Data","Uploads");
+        private readonly string _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Uploads");
+
         public DeviceRepository(DatabaseContext db)
         {
             this.db = db;
             if (!Directory.Exists(_uploadPath))
-            { Directory.CreateDirectory(_uploadPath); }
+            {
+                Directory.CreateDirectory(_uploadPath);
+            }
         }
-        private async Task<string> SaveImage(IFormFile imageFile) 
-        { if (imageFile == null || imageFile.Length == 0) 
-                return null; 
+
+        private async Task<string> SaveImage(IFormFile imageFile)
+        {
+            if (imageFile == null || imageFile.Length == 0)
+                return null;
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(imageFile.FileName)}";
-            var filePath = Path.Combine(_uploadPath, fileName); 
-            using (var stream = new FileStream(filePath, FileMode.Create)) 
-            { 
-                await imageFile.CopyToAsync(stream); 
+            var filePath = Path.Combine(_uploadPath, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
             }
             return fileName;
         }
+
         public async Task<Device> GetDeviceById(int deviceId)
         {
             var device = await db.Devices.SingleOrDefaultAsync(u => u.Id == deviceId);
@@ -54,8 +60,8 @@ namespace Server.Repositories
             {
                 string searchValueLower = req.SearchValue.ToLower();
                 devices = devices.Where(d => d.Name.ToLower().Contains(searchValueLower) ||
-                                          d.Description.ToLower().Contains(searchValueLower) ||
-                                          d.Type.ToLower().Contains(searchValueLower));
+                                             d.Description.ToLower().Contains(searchValueLower) ||
+                                             d.Type.ToLower().Contains(searchValueLower));
             }
 
             // Lấy danh sách thiết bị đã phân trang
@@ -80,7 +86,6 @@ namespace Server.Repositories
                     Description = device.Description,
                     Image = device.Image,
                     Status = device.Status,
-
                 });
             }
 
@@ -143,11 +148,19 @@ namespace Server.Repositories
                 var imagePath = await SaveImage(request.ImageFile);
                 device.Image = imagePath;
             }
-            
+
             await db.SaveChangesAsync();
             return true;
         }
 
+        public async Task<bool> CheckNameExists(string name)
+        {
+            return await db.Devices.AnyAsync(s => s.Name == name);
+        }
 
+        public async Task<bool> IsDeviceNameUnique(string name, int deviceId)
+        {
+            return !(await db.Devices.AnyAsync(s => s.Name == name && s.Id != deviceId));
+        }
     }
 }

@@ -13,5 +13,8 @@ namespace Server.Repositories
         Task<bool> UpdateSoftware(int softwareId, SoftwareUpdateDto request);
         Task<Software> GetSoftwareById(int softwareId);
         Task<int> CountExpiredSoftware();
+        Task<bool> CheckNameExists(string name);
+        Task<bool> IsSoftwareNameUnique(string name, int softwareId);
+        Task UpdateStatusForExpiredLicenses();
     }
 }
