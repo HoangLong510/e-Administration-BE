@@ -68,6 +68,7 @@ namespace Server.Controllers
                     SenderName = sender?.FullName ?? "Unknown", // Trả về tên người gửi hoặc "Unknown" nếu không tìm thấy
                     notification.ActionType,
                     notification.ReportId,
+                    notification.TaskId,
                     ReportDetails = report,
                 });
             }
