@@ -9,5 +9,6 @@ namespace Server.Repositories
         Task<Tasks> GetTaskById(int taskId);
         Task<bool> CreateTask(CreateTaskDTO req);
         Task<bool> ChangeTaskStatus(int taskId);
+        Task<List<Tasks>> GetTaskByReportId(int reportId);
     }
 }

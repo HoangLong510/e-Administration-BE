@@ -13,9 +13,10 @@ namespace Server.Models
         public List<string>? Images { get; set; }
         public int SenderId { get; set; }
         public User Sender { get; set; }
-        public DateTime CreationTime { get; set; } = DateTime.UtcNow;
-        public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
+        public DateTime CreationTime { get; set; } = DateTime.Now;
+        public DateTime LastUpdated { get; set; } = DateTime.Now;
 
         public List<Comment> Comments { get; set; }
+        public ICollection<Tasks>? Tasks { get; set; }
     }
 }

@@ -121,5 +121,12 @@ namespace Server.Repositories
 
             return false;
         }
+
+        public async Task<List<Tasks>> GetTaskByReportId(int reportId)
+        {
+            return await db.Tasks
+                                 .Where(u => u.ReportId == reportId)
+                                 .ToListAsync();
+        }
     }
 }

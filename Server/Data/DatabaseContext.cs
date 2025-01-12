@@ -30,6 +30,13 @@ namespace Server.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Tasks>()
+                .HasOne<Report>()
+                .WithMany(c => c.Tasks)
+                .HasForeignKey(u => u.ReportId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
             modelBuilder.Entity<User>()
                 .HasOne<Class>()
                 .WithMany(c => c.Users)

@@ -16,13 +16,15 @@ namespace Server.Controllers
         private readonly TokenService _tokenService;
         private readonly ICommentRepository _commentRepo;
         private readonly INotificationRepository _notificationRepo;
-        public ReportController(INotificationRepository notificationRepo, IReportRepository reportRepo, IUserRepository userRepo, TokenService tokenService , ICommentRepository commentRepo)
+        private readonly ITaskRepository taskRepo;
+        public ReportController(ITaskRepository taskRepo, INotificationRepository notificationRepo, IReportRepository reportRepo, IUserRepository userRepo, TokenService tokenService , ICommentRepository commentRepo)
         {
             _reportRepo = reportRepo;
             _userRepo = userRepo;
             _tokenService = tokenService;
             _commentRepo = commentRepo;
             _notificationRepo = notificationRepo;
+            this.taskRepo = taskRepo;
         }
 
         [HttpPost]
@@ -59,7 +61,7 @@ namespace Server.Controllers
                     Content = $"A new report has been created: {Enum.GetName(typeof(ReportTitle), report.Title)}",
                     ReportId = createdReport.Id,
                     ActionType = "NewReport",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
 
                 await _notificationRepo.CreateNotiReportAsync(notification);
@@ -97,6 +99,7 @@ namespace Server.Controllers
                     return NotFound(new { Success = false, Message = "Report not found" });
 
                 var comments = await _commentRepo.GetCommentsByReportIdAsync(id);
+                var tasks = await taskRepo.GetTaskByReportId(id);
                 return Ok(new
                 {
                     Success = true,
@@ -118,6 +121,17 @@ namespace Server.Controllers
                             UserFullName = c.User?.FullName,
                             c.Content,
                             c.CreationTime
+                        }),
+                        Tasks = tasks.Select(t => new
+                        {
+                            t.Id,
+                            t.Title,
+                            t.Content,
+                            t.AssigneesId,
+                            AssigneeFullName = t.Assignees?.FullName,
+                            t.CreatedAt,
+                            t.ComplatedAt,
+                            t.Status
                         })
                     }
                 });
@@ -198,7 +212,7 @@ namespace Server.Controllers
                     Content = $"{sender.FullName} commented on your report: {comment.Content}",
                     ReportId = reportId,
                     ActionType = "AdminComment",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
 
                 await _notificationRepo.CreateNotiReportAsync(notification);
@@ -216,7 +230,7 @@ namespace Server.Controllers
                         Content = $"{sender.FullName} added a comment on their own report: {comment.Content}",
                         ReportId = reportId,
                         ActionType = "UserComment",
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.Now
                     };
 
                     await _notificationRepo.CreateNotiReportAsync(notification);
@@ -348,7 +362,7 @@ namespace Server.Controllers
                 Content = $"Your report status has been changed to: {Enum.GetName(typeof(ReportStatus), status)}",
                 ReportId = id,
                 ActionType = "StatusChange",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await _notificationRepo.CreateNotiReportAsync(notification);
@@ -401,6 +415,8 @@ namespace Server.Controllers
                 Data = reportsByMonth
             });
         }
+
+
 
     }
 }
