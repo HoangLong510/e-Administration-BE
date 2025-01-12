@@ -186,6 +186,129 @@ namespace Server.Controllers
             }
         }
 
+        [HttpPut("update-software/{id}")]
+        public async Task<ActionResult> UpdateSoftware(int id, SoftwareUpdateDto request)
+        {
+            var token = Request.Cookies["token"];
+            var role = tokenService.GetRoleFromToken(token);
+            if (role != "Admin")
+            {
+                return Unauthorized(new
+                {
+                    Success = false,
+                    Message = "You do not have permission to perform this action"
+                });
+            }
+
+            var errors = new Dictionary<string, string>();
+
+            // Kiểm tra tên phần mềm
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                errors["name"] = "Name is required";
+            }
+            else
+            {
+                var isUniqueName = await softwareRepo.IsSoftwareNameUnique(request.Name, id);
+                if (!isUniqueName)
+                {
+                    errors["name"] = "Name already exists";
+                }
+            }
+
+            // Kiểm tra ngày License Expire nếu đã thay đổi
+            var software = await softwareRepo.GetSoftwareById(id);
+            if (software == null)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Software not found"
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.LicenseExpire) && software.LicenseExpire != DateTime.Parse(request.LicenseExpire))
+            {
+                if (string.IsNullOrWhiteSpace(request.LicenseExpire))
+                {
+                    errors["LicenseExpire"] = "License Expire is required";
+                }
+                else
+                {
+                    try
+                    {
+                        var formatDate = DateTime.Parse(request.LicenseExpire);
+                        if (formatDate < DateTime.Now.Date)
+                        {
+                            errors["LicenseExpire"] = "License Expire date cannot be earlier than today";
+                        }
+                    }
+                    catch (FormatException)
+                    {
+                        errors["LicenseExpire"] = "Invalid License Expire format";
+                    }
+                }
+            }
+
+            // Kiểm tra mô tả
+            if (string.IsNullOrWhiteSpace(request.Description))
+            {
+                errors["description"] = "Description is required";
+            }
+
+            if (errors.Count > 0)
+            {
+                var errorMessage = "Invalid software information! Please check the errors of the fields again:\n";
+                foreach (var error in errors)
+                {
+                    errorMessage += $"{error.Key}: {error.Value}\n";
+                }
+                return BadRequest(new
+                {
+                    Success = false,
+                    Errors = errors,
+                    Message = errorMessage
+                });
+            }
+
+            try
+            {
+                var result = await softwareRepo.UpdateSoftware(id, request);
+                if (!result)
+                {
+                    return BadRequest(new
+                    {
+                        Success = false,
+                        Message = "Failed to update software"
+                    });
+                }
+
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "Software updated successfully"
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = $"An error occurred while updating the software: {ex.Message}"
+                });
+            }
+        }
+
+
+
 
         [HttpGet("disable-software/{id}")]
         public async Task<ActionResult> DisableSoftware(int id)
@@ -218,98 +341,6 @@ namespace Server.Controllers
             });
         }
 
-        [HttpPut("update-software/{id}")]
-        public async Task<ActionResult> UpdateSoftware(int id, SoftwareUpdateDto request)
-        {
-            var token = Request.Cookies["token"];
-            var role = tokenService.GetRoleFromToken(token);
-            if (role != "Admin")
-            {
-                return Unauthorized(new
-                {
-                    Success = false,
-                    Message = "You do not have permission to perform this action"
-                });
-            }
-
-            var errors = new Dictionary<string, string>();
-
-            // Kiểm tra tên phần mềm
-            if (string.IsNullOrWhiteSpace(request.Name))
-            {
-                errors["name"] = "Name is required";
-            }
-            else
-            {
-                var isUniqueName = await softwareRepo.IsSoftwareNameUnique(request.Name, id);
-                if (!isUniqueName)
-                {
-                    errors["name"] = "Name already exists";
-                }
-            }
-
-            // Kiểm tra ngày License Expire
-            if (string.IsNullOrWhiteSpace(request.LicenseExpire))
-            {
-                errors["LicenseExpire"] = "License Expire is required";
-            }
-            else
-            {
-                try
-                {
-                    var formatDate = DateTime.Parse(request.LicenseExpire);
-                    if (formatDate <= DateTime.Now.Date.AddDays(7))
-                    {
-                        errors["LicenseExpire"] = "License Expire date must be at least 7 days from today";
-                    }
-                }
-                catch (FormatException)
-                {
-                    errors["LicenseExpire"] = "Invalid License Expire format";
-                }
-            }
-
-            // Kiểm tra mô tả
-            if (string.IsNullOrWhiteSpace(request.Description))
-            {
-                errors["description"] = "Description is required";
-            }
-
-            if (errors.Count > 0)
-            {
-                var errorMessage = "Invalid software information! Please check the errors of the fields again:\n";
-                foreach (var error in errors)
-                {
-                    errorMessage += $"{error.Key}: {error.Value}\n";
-                }
-                return BadRequest(new
-                {
-                    Success = false,
-                    Errors = errors,
-                    Message = errorMessage
-                });
-            }
-
-            var result = await softwareRepo.UpdateSoftware(id, request);
-            if (!result)
-            {
-                return BadRequest(new
-                {
-                    Success = false,
-                    Message = "Failed to update software"
-                });
-            }
-
-            return Ok(new
-            {
-                Success = true,
-                Message = "Software updated successfully"
-            });
-        }
-
-
-
-
         [HttpGet("count-expired-softwares")]
         public async Task<ActionResult> CountExpiredSoftwares()
         {
@@ -333,5 +364,38 @@ namespace Server.Controllers
             }
         }
 
+        // New Endpoint to Trigger Status Update for Expired Licenses
+        [HttpPut("update-status-expired")]
+        public async Task<ActionResult> UpdateStatusForExpiredLicenses()
+        {
+            var token = Request.Cookies["token"];
+            var role = tokenService.GetRoleFromToken(token);
+            if (role != "Admin")
+            {
+                return Unauthorized(new
+                {
+                    Success = false,
+                    Message = "You do not have permission to perform this action"
+                });
+            }
+
+            try
+            {
+                await softwareRepo.UpdateStatusForExpiredLicenses();
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "Status of expired licenses updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = $"An error occurred while updating status: {ex.Message}"
+                });
+            }
+        }
     }
 }
