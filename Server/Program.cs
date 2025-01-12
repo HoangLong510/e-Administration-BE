@@ -18,6 +18,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DatabaseContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("MyConnection"));
+
 });
 
 // Cors
@@ -49,31 +50,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 // Service
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<EmailService>();
+
+
+// Register the background service
+builder.Services.AddHostedService<SoftwareStatusUpdateService>();
+
+// Register the background service
+builder.Services.AddHostedService<SoftwareStatusUpdateService>();
 
 // Repo
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
-
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<ISoftwareRepository, SoftwareRepository>();
 builder.Services.AddScoped<ILabDeviceRepository, LabDeviceRepository>();
-
-
-
 builder.Services.AddScoped<ILabRepository, LabRepository>();
-
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
-
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
-
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+
 
 var app = builder.Build();
 

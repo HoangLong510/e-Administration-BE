@@ -25,10 +25,18 @@ namespace Server.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Tasks> Tasks { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<EmailModel> Emails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Tasks>()
+                .HasOne<Report>()
+                .WithMany(c => c.Tasks)
+                .HasForeignKey(u => u.ReportId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             modelBuilder.Entity<User>()
                 .HasOne<Class>()
@@ -59,8 +67,7 @@ namespace Server.Data
             modelBuilder.Entity<Tasks>()
                 .HasOne(t => t.Assignees)
                 .WithMany()
-                .HasForeignKey(t => t.AssigneesId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasForeignKey(t => t.AssigneesId);
 
             // Configures the "Role" property of the "User" entity similarly, ensuring that the UserRole enum is stored as a string in the database.
             modelBuilder.Entity<User>()
