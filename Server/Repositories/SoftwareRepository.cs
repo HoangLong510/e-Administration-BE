@@ -109,14 +109,31 @@ namespace Server.Repositories
                 return false;
             }
 
+            // Check if the licenseExpire date has been changed
+            if (!string.IsNullOrWhiteSpace(request.LicenseExpire) && software.LicenseExpire != DateTime.Parse(request.LicenseExpire))
+            {
+                var newLicenseExpireDate = DateTime.Parse(request.LicenseExpire);
+                var currentDate = DateTime.Now.Date;
+
+                // Validate the new licenseExpire date
+                if (newLicenseExpireDate < currentDate)
+                {
+                    throw new InvalidOperationException("License Expire date cannot be earlier than today.");
+                }
+
+                software.LicenseExpire = newLicenseExpireDate;
+            }
+
             software.Name = request.Name;
             software.Description = request.Description;
-            software.LicenseExpire = DateTime.Parse(request.LicenseExpire);
             software.Status = request.Status;
 
             await db.SaveChangesAsync();
             return true;
         }
+
+
+
 
         public async Task<int> CountExpiredSoftware()
         {
@@ -140,5 +157,20 @@ namespace Server.Repositories
             return !(await db.Softwares.AnyAsync(s => s.Name == name && s.Id != softwareId));
         }
 
+        
+        public async Task UpdateStatusForExpiredLicenses()
+        {
+            var currentDate = DateTime.Now;
+            var expiredSoftwares = await db.Softwares
+                .Where(s => s.LicenseExpire.HasValue && s.LicenseExpire.Value < currentDate && s.Status == true)
+                .ToListAsync();
+
+            foreach (var software in expiredSoftwares)
+            {
+                software.Status = false;
+            }
+
+            await db.SaveChangesAsync();
+        }
     }
 }

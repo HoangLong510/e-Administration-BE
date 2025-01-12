@@ -72,6 +72,7 @@ namespace Server.Repositories
                 Name = d.Name,
                 Type = d.Type,
                 Description = d.Description,
+                Status = d.Status,
                 LicenseExpire = null, // Devices do not have LicenseExpire
                 IsSoftware = false
             }).ToListAsync();
