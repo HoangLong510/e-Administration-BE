@@ -66,6 +66,7 @@ namespace Server.Controllers
                     notification.CreatedAt,
                     notification.Viewed,
                     SenderName = sender?.FullName ?? "Unknown", // Trả về tên người gửi hoặc "Unknown" nếu không tìm thấy
+                    ImageName = sender?.Avatar ?? "Unknown",
                     notification.ActionType,
                     notification.ReportId,
                     notification.TaskId,

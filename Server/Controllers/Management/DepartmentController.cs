@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Server.Models;
+using Server.Models.Enums;
 using Server.Repositories;
 
 namespace Server.Controllers
@@ -9,10 +10,12 @@ namespace Server.Controllers
     public class DepartmentsController : ControllerBase
     {
         private readonly IDepartmentRepository _departmentRepository;
+        private readonly IUserRepository _userRepository;
 
-        public DepartmentsController(IDepartmentRepository departmentRepository)
+        public DepartmentsController(IDepartmentRepository departmentRepository, IUserRepository userRepository)
         {
             _departmentRepository = departmentRepository;
+            _userRepository = userRepository;
         }
 
         [HttpGet]
@@ -94,30 +97,15 @@ namespace Server.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDepartment(int id)
+        [HttpGet("getusersbyhod")]
+        public async Task<IActionResult> GetUsersByHod()
         {
-            try
+            var users = await _userRepository.GetUsersByRoleAsync(UserRole.HOD);
+            return Ok(new
             {
-                var department = await _departmentRepository.GetDepartmentByIdAsync(id);
-                if (department == null)
-                {
-                    return NotFound(new { Success = false, Message = "Department not found" });
-                }
-
-                var result = await _departmentRepository.DeleteDepartmentAsync(id);
-                if (!result)
-                {
-                    return NotFound(new { Success = false, Message = "Department not found" });
-                }
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                // Log the exception or handle it appropriately
-                return StatusCode(500, new { Success = false, Message = "Failed to delete department: " + ex.Message });
-            }
+                Success = true,
+                Data= users
+            });
         }
 
         [HttpGet("get-all-departments-no-pagination")]

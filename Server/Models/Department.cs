@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Server.Models
 {
@@ -11,6 +12,9 @@ namespace Server.Models
 
         [Required]
         public int Hod { get; set; } // User ID
+
+        [NotMapped]
+        public User? User { get; set; }
 
         public string Description { get; set; }
 
