@@ -99,12 +99,21 @@ namespace Server.Controllers
 
             var errors = new Dictionary<string, string>();
 
-            // Kiểm tra các trường bắt buộc không được để trống
+            // Kiểm tra tên thiết bị
             if (string.IsNullOrWhiteSpace(device.Name))
             {
                 errors["name"] = "Name is required";
             }
+            else
+            {
+                var checkName = await deviceRepo.CheckNameExists(device.Name);
+                if (checkName)
+                {
+                    errors["name"] = "Name already exists";
+                }
+            }
 
+            // Kiểm tra các trường bắt buộc khác
             if (string.IsNullOrWhiteSpace(device.Type))
             {
                 errors["type"] = "Type is required";
@@ -118,6 +127,10 @@ namespace Server.Controllers
             if (device.ImageFile == null)
             {
                 errors["imageFile"] = "Image file is required";
+            }
+            else if (!new[] { "image/gif", "image/jpeg", "image/png" }.Contains(device.ImageFile.ContentType))
+            {
+                errors["imageFile"] = "Invalid image format. Only GIF, JPEG, and PNG are allowed.";
             }
 
             if (errors.Count > 0)
@@ -159,6 +172,7 @@ namespace Server.Controllers
                 });
             }
         }
+
 
 
 
@@ -209,6 +223,48 @@ namespace Server.Controllers
                 });
             }
 
+            var errors = new Dictionary<string, string>();
+
+            // Kiểm tra tên thiết bị
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                errors["name"] = "Name is required";
+            }
+            else
+            {
+                var isUniqueName = await deviceRepo.IsDeviceNameUnique(request.Name, id);
+                if (!isUniqueName)
+                {
+                    errors["name"] = "Name already exists";
+                }
+            }
+
+            // Kiểm tra các trường bắt buộc khác
+            if (string.IsNullOrWhiteSpace(request.Type))
+            {
+                errors["type"] = "Type is required";
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Description))
+            {
+                errors["description"] = "Description is required";
+            }
+
+            if (request.ImageFile != null && !new[] { "image/jpeg", "image/png" }.Contains(request.ImageFile.ContentType))
+            {
+                errors["imageFile"] = "Invalid image format. Only JPEG, and PNG are allowed.";
+            }
+
+            if (errors.Count > 0)
+            {
+                return BadRequest(new
+                {
+                    Success = false,
+                    Errors = errors,
+                    Message = "Invalid device information! Please check the errors of the fields again."
+                });
+            }
+
             var result = await deviceRepo.UpdateDevice(id, request);
             if (!result)
             {
@@ -225,6 +281,7 @@ namespace Server.Controllers
                 Message = "Device updated successfully"
             });
         }
+
 
     }
 }
