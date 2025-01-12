@@ -4,6 +4,7 @@
     {
         Education,
         Machinery,
-        Other
+        Other,
+        ExtraTime,
     }
 }
