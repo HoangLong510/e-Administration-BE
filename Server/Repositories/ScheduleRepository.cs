@@ -119,20 +119,14 @@ namespace Server.Repositories
             var query = from schedule in db.Schedules
                         join user in db.Users on schedule.UserId equals user.Id
                         select new { schedule, user };
-
-            // Filter by FullName
             if (!string.IsNullOrEmpty(Name))
             {
                 query = query.Where(x => x.user.FullName.Contains(Name));
             }
-
-            // Filter by Lab
             if (!string.IsNullOrEmpty(Lab))
             {
                 query = query.Where(x => x.schedule.Lab.Contains(Lab));
             }
-
-            // Select the data into the DTO
             var result = await query.Select(x => new GetScheduleDto
             {
                 Id = x.schedule.Id,

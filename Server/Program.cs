@@ -55,9 +55,8 @@ builder.Services.AddScoped<EmailService>();
 
 // Register the background service
 builder.Services.AddHostedService<SoftwareStatusUpdateService>();
-
-// Register the background service
-builder.Services.AddHostedService<SoftwareStatusUpdateService>();
+builder.Services.AddSingleton<EmailBackgroundService>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<EmailBackgroundService>());
 
 // Repo
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -72,6 +71,7 @@ builder.Services.AddScoped<IClassRepository, ClassRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<IEmailRepository, EmailRepository>();
 
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 
