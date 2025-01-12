@@ -37,7 +37,12 @@ namespace Server.Repositories
                     }
                 }
 
-                return await query.ToListAsync();
+                var departments= await query.ToListAsync();
+                foreach (var department in departments)
+                {
+                    department.User= await db.Users.SingleOrDefaultAsync(u => u.Id == department.Hod);
+                }
+                return departments;
             }
             catch (Exception ex)
             {
@@ -74,23 +79,11 @@ namespace Server.Repositories
             return existingDepartment;
         }
 
-        public async Task<bool> DeleteDepartmentAsync(int id)
-        {
-            var department = await db.Departments.FindAsync(id);
-            if (department == null)
-            {
-                return false;
-            }
-
-            db.Departments.Remove(department);
-            await db.SaveChangesAsync();
-            return true;
-        }
-
         public async Task<IEnumerable<Department>> GetAllDepartmentsNoPagination()
         {
             var departments = await db.Departments.ToListAsync();
             return departments;
         }
+
     }
 }

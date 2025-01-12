@@ -81,7 +81,7 @@ namespace Server.Controllers
                 TaskId = result.Id,
                 Content = "You have just been assigned a new task",
                 ActionType = "NewTask",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await notiRepo.CreateNotiTaskAsync(notification);
@@ -175,7 +175,7 @@ namespace Server.Controllers
                     Content = $"Assignees just changed the status of the task with id {task.Id}",
                     TaskId = task.Id,
                     ActionType = "ChangeStatusTask",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
 
                 await notiRepo.CreateNotiTaskAsync(notification);
@@ -212,7 +212,7 @@ namespace Server.Controllers
                 Content = $"Task with id {task.Id} has just been canceled",
                 TaskId = task.Id,
                 ActionType = "CancelTask",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await notiRepo.CreateNotiTaskAsync(notification);
@@ -279,7 +279,7 @@ namespace Server.Controllers
                 Content = $"Task with id {result.Id} has just been edited",
                 TaskId = result.Id,
                 ActionType = "EditTask",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await notiRepo.CreateNotiTaskAsync(notification);
