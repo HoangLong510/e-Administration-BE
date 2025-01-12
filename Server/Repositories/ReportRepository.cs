@@ -8,11 +8,11 @@ namespace Server.Repositories
 {
     public class ReportRepository : IReportRepository
     {
-        private readonly DatabaseContext _context;
+        private readonly DatabaseContext db;
 
         public ReportRepository(DatabaseContext context)
         {
-            _context = context;
+            this.db = context;
         }
 
         public async Task<Report> CreateReportAsync(Report report, List<IFormFile> images)
@@ -45,20 +45,20 @@ namespace Server.Repositories
             }
 
 
-            _context.Reports.Add(report);
-            await _context.SaveChangesAsync();
+            db.Reports.Add(report);
+            await db.SaveChangesAsync();
             return report;
         }
 
         public async Task<Report> GetReportByIdAsync(int id)
         {
-            return await _context.Reports
+            return await db.Reports
                 .Include(r => r.Sender)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
         public async Task<int> GetReportsCountBySenderAsync(int senderId, ReportTitle? category = null, ReportStatus? status = null)
         {
-            var query = _context.Reports.AsQueryable();
+            var query = db.Reports.AsQueryable();
 
             query = query.Where(r => r.SenderId == senderId);
 
@@ -77,7 +77,7 @@ namespace Server.Repositories
 
         public async Task<List<Report>> GetAllReportsAsync(ReportTitle? category = null, ReportStatus? status = null, int page = 1, int pageSize = 10)
         {
-            var query = _context.Reports.AsQueryable();
+            var query = db.Reports.AsQueryable();
 
             if (category.HasValue)
             {
@@ -99,7 +99,7 @@ namespace Server.Repositories
 
         public async Task<List<Report>> GetReportsBySenderIdAsync(int senderId, ReportTitle? category = null, ReportStatus? status = null, int page = 1, int pageSize = 10)
         {
-            var query = _context.Reports.Where(r => r.SenderId == senderId);
+            var query = db.Reports.Where(r => r.SenderId == senderId);
 
             if (category.HasValue)
             {
@@ -121,7 +121,7 @@ namespace Server.Repositories
 
         public async Task<int> GetReportsCountAsync(ReportTitle? category = null, ReportStatus? status = null)
         {
-            var query = _context.Reports.AsQueryable();
+            var query = db.Reports.AsQueryable();
 
             if (category.HasValue)
             {
@@ -139,12 +139,12 @@ namespace Server.Repositories
 
         public async Task<Report> UpdateReportStatusAsync(int id, ReportStatus status)
         {
-            var report = await _context.Reports.FindAsync(id);
+            var report = await db.Reports.FindAsync(id);
             if (report != null)
             {
                 report.Status = status;
                 report.LastUpdated = DateTime.Now;
-                await _context.SaveChangesAsync();
+                await db.SaveChangesAsync();
             }
             return report;
         }
@@ -152,7 +152,7 @@ namespace Server.Repositories
 
         public async Task<int> GetTotalPendingReportsAsync()
         {
-            return await _context.Reports
+            return await db.Reports
                 .CountAsync(r => r.Status == ReportStatus.Pending);
         }
 
@@ -162,7 +162,7 @@ namespace Server.Repositories
 
             for (int month = 1; month <= 12; month++)
             {
-                var count = await _context.Reports
+                var count = await db.Reports
                     .Where(r => r.CreationTime.Year == year && r.CreationTime.Month == month)
                     .CountAsync();
 
