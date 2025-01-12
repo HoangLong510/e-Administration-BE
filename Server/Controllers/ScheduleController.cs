@@ -8,6 +8,8 @@ using System.Globalization;
 using System.Linq;
 using System.Web;
 using OfficeOpenXml;
+using Server.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Server.Controllers
 {
@@ -18,11 +20,13 @@ namespace Server.Controllers
         private readonly IScheduleRepository scheduleRepository;
 
         private readonly TokenService tokenService;
+        private readonly DatabaseContext db;
 
-        public ScheduleController(IScheduleRepository scheduleRepository, TokenService tokenService)
+        public ScheduleController(IScheduleRepository scheduleRepository, TokenService tokenService, DatabaseContext db)
         {
             this.scheduleRepository = scheduleRepository;
             this.tokenService = tokenService;
+            this.db = db;
         }
 
         [HttpGet]
@@ -37,7 +41,7 @@ namespace Server.Controllers
                 return Unauthorized("Invalid token.");
             }
 
-            if (userRole == "Admin" || userRole == "Student")
+            if (userRole == "Admin" || userRole == "Student" || userRole == "Instructor")
             {
                 if (userRole == "Student")
                 {
@@ -55,11 +59,24 @@ namespace Server.Controllers
                     }
 
                     var allSchedules = await scheduleRepository.GetAllSchedulesAsync();
+
                     var studentSchedules = allSchedules
                         .Where(s => s.Class == userClass.Name)
                         .OrderBy(s => s.StartTime)
                         .ToList();
+
                     return Ok(studentSchedules);
+                }
+                else if (userRole == "Instructor")
+                {
+                    var Schedules = await scheduleRepository.GetSchedulesByUserIdAsync(userId);
+                    if (Schedules == null || !Schedules.Any())
+                    {
+                        return NotFound("No schedules found for this Instructor.");
+                    }
+
+                    var sortedSchedules = Schedules.OrderBy(s => s.StartTime).ToList();
+                    return Ok(sortedSchedules);
                 }
                 else
                 {
@@ -87,7 +104,7 @@ namespace Server.Controllers
 
             var allSchedules = await scheduleRepository.GetAllSchedulesAsync();
 
-            var schedule = allSchedules.FirstOrDefault(s => s.Id == id);
+            var schedule = allSchedules.OrderBy(s => s.StartTime).FirstOrDefault(s => s.Id == id);
 
             if (schedule == null)
             {
@@ -157,6 +174,7 @@ namespace Server.Controllers
             var schedules = await scheduleRepository.GetSchedulesByUserIdAsync(userId);
             var filteredSchedules = schedules
                 .Where(s => s.StartTime.Date >= startDate.Date && s.StartTime.Date <= endDate.Date)
+                .OrderBy(s => s.StartTime)
                 .ToList();
 
             return Ok(filteredSchedules);
@@ -166,8 +184,12 @@ namespace Server.Controllers
         public async Task<IActionResult> CreateSchedule([FromBody] CreateScheduleDto scheduleDto)
         {
             var token = Request.Cookies["token"];
-            var userIdString = tokenService.GetUserIdFromToken(token);
+            if (string.IsNullOrEmpty(token))
+            {
+                return Unauthorized("Token is missing.");
+            }
 
+            var userIdString = tokenService.GetUserIdFromToken(token);
             if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
             {
                 return Unauthorized("Invalid token.");
@@ -217,7 +239,7 @@ namespace Server.Controllers
             }
 
             var existingSchedule = await scheduleRepository.GetScheduleByIdAsync(id);
-            if (existingSchedule == null || existingSchedule.UserId != userId)
+            if (existingSchedule == null)
             {
                 return NotFound($"Schedule with Id {id} not found.");
             }
@@ -258,7 +280,7 @@ namespace Server.Controllers
             var schedules = await scheduleRepository.GetSchedulesByUserIdAsync(userId);
             if (schedules == null || !schedules.Any())
             {
-                return NotFound($"No schedules found for user with ID {userId}.");
+                return NotFound($"No schedules found for user with UserId: {userId}.");
             }
 
             var userIds = schedules.Select(s => s.UserId).Distinct();
@@ -350,5 +372,89 @@ namespace Server.Controllers
                 };
             }
         }
+
+        [HttpGet("allclass")]
+        public async Task<IActionResult> GetAllClass()
+        {
+            var token = Request.Cookies["token"];
+            var userIdString = tokenService.GetUserIdFromToken(token);
+
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized("Invalid token.");
+            }
+
+
+            var allClasses = await scheduleRepository.GetAllClassAsync();
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Get class list successfully.",
+                Data = allClasses
+            });
+        }
+
+        [HttpGet("alllab")]
+        public async Task<IActionResult> GetAllLab()
+        {
+            var token = Request.Cookies["token"];
+            var userIdString = tokenService.GetUserIdFromToken(token);
+
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized("Invalid token.");
+            }
+
+
+            var allLab = await scheduleRepository.GetAllLabAsync();
+            var availableLab = allLab.Where(s => s.Status == true).ToList();
+            return Ok(new
+            {
+                Success = true,
+                Message = "Get Lab list successfully.",
+                Data = availableLab
+            });
+        }
+        [HttpGet("GetScheduleByCondition")]
+        public async Task<IActionResult> GetScheduleByConditionAsync([FromQuery] string Name, [FromQuery] string Lab)
+        {
+            var query = from schedule in db.Schedules
+                        join user in db.Users on schedule.UserId equals user.Id
+                        select new { schedule, user };
+
+            if (!string.IsNullOrEmpty(Name))
+            {
+
+                query = query.Where(x => x.user.FullName.Contains(Name));
+            }
+            if (!string.IsNullOrEmpty(Lab))
+            {
+                query = query.Where(x => x.schedule.Lab.Contains(Lab));
+            }
+
+            var result = await query.Select(x => new GetScheduleDto
+            {
+                Id = x.schedule.Id,
+                Course = x.schedule.Course,
+                Lab = x.schedule.Lab,
+                Class = x.schedule.Class,
+                StartTime = x.schedule.StartTime,
+                EndTime = x.schedule.EndTime,
+                UserId = x.schedule.UserId,
+                FullName = x.user.FullName
+            }).ToListAsync();
+
+
+            if (result.Any())
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return NotFound("No suitable schedule found!");
+            }
+        }
     }
 }
+

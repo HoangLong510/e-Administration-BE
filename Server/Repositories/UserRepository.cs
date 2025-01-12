@@ -348,5 +348,30 @@ namespace Server.Repositories
                 throw new Exception("An error occurred while fetching the total users.", ex);
             }
         }
+
+        public async Task<List<UserResponseDto>> GetUserForTaskAssignees()
+        {
+            var users = await db.Users.Where(u => u.Role.ToString() == "TechnicalStaff" ||
+                                                  u.Role.ToString() == "Instructor")
+                                      .ToListAsync();
+            
+            var result = users.Select(user => new UserResponseDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                Address = user.Address,
+                Gender = user.Gender.ToString(),
+                Role = user.Role.ToString(),
+                IsActive = user.IsActive,
+                ClassId = user.ClassId,
+                DepartmentId = user.DepartmentId,
+                Avatar = user.Avatar
+            }).ToList();
+
+            return result;
+        }
     }
 }

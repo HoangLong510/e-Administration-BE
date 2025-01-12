@@ -23,8 +23,8 @@ namespace Server.Data
         public DbSet<Document> Documents { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Tasks> Tasks { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -56,6 +56,12 @@ namespace Server.Data
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Tasks>()
+                .HasOne(t => t.Assignees)
+                .WithMany()
+                .HasForeignKey(t => t.AssigneesId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Configures the "Role" property of the "User" entity similarly, ensuring that the UserRole enum is stored as a string in the database.
             modelBuilder.Entity<User>()
                 .Property(u => u.Role)
@@ -65,17 +71,22 @@ namespace Server.Data
             modelBuilder.Entity<User>()
                 .Property(u => u.Gender)
                 .HasConversion(new EnumToStringConverter<UserGender>());
-
+                
+            // Configures the "Status" property of the "Task" entity similarly, ensuring that the TaskStatusEnum enum is stored as a string in the database.
+            modelBuilder.Entity<Tasks>()
+                .Property(t => t.Status)
+                .HasConversion(new EnumToStringConverter<TaskStatusEnum>());
+                
             // Thiết lập khóa ngoại cho Device và Software liên kết với Lab
             modelBuilder.Entity<Device>()
                 .HasOne<Lab>(d => d.Lab)
                 .WithMany(l => l.Devices)
-                .HasForeignKey(d => d.LabId); // Thay đổi từ RoomId thành LabID
+                .HasForeignKey(d => d.LabId);
 
             modelBuilder.Entity<Software>()
                 .HasOne<Lab>(s => s.Lab)
                 .WithMany(l => l.Softwares)
-                .HasForeignKey(s => s.LabId); // Thay đổi từ RoomId thành LabID
+                .HasForeignKey(s => s.LabId);
 
             // Seeding data for User table
             modelBuilder.Entity<User>().HasData(

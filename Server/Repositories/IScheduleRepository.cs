@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Server.DTOs.Schedule;
 using Server.Models;
 
 public interface IScheduleRepository
@@ -13,5 +14,9 @@ public interface IScheduleRepository
     Task<Schedule> GetScheduleByIdAsync(int id);
     Task<User> GetUserByUserIdAsync(int userId);
     Task<Class> GetClassByIDAsync(int id);
-    Task<Document> CreateDocumentAsync(Document document);
+    Task<IEnumerable<Class>> GetAllClassAsync();
+    Task<IEnumerable<Lab>> GetAllLabAsync();
+    Task<IEnumerable<GetScheduleDto>> GetScheduleByConditionAsync(string Name, string Lab);
+
+
 }
