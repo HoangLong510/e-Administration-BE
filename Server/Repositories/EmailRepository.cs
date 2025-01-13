@@ -94,50 +94,54 @@ namespace Server.Repositories
         {
             try
             {
-                var lastEmail = await _context.Emails
-                    .Where(email => email.ToEmail == toEmail && email.Subject == subject && email.Status == "sent")
-                    .OrderByDescending(email => email.SentDate)
-                    .FirstOrDefaultAsync();
+                var expiringSoftwares = await _context.Softwares
+                    .Where(s => s.LicenseExpire.HasValue && s.LicenseExpire.Value <= DateTime.UtcNow.AddMonths(1))
+                    .ToListAsync();
 
-                if (lastEmail == null || (lastEmail.SentDate.HasValue && lastEmail.SentDate.Value <= DateTime.UtcNow.AddDays(-7)))
+                foreach (var software in expiringSoftwares)
                 {
-                    var user = await _context.Users
-                        .Where(u => u.Email == toEmail)
+                    var lastEmail = await _context.Emails
+                        .Where(email => email.ToEmail == toEmail  && email.SoftwareName == software.Name && email.Status == "sent")
+                        .OrderByDescending(email => email.SentDate)
                         .FirstOrDefaultAsync();
 
-                    var software = await _context.Softwares
-                        .FirstOrDefaultAsync(s => s.LicenseExpire.HasValue && s.LicenseExpire.Value <= DateTime.UtcNow.AddMonths(1));
+                    if (lastEmail == null || (lastEmail.SentDate.HasValue && lastEmail.SentDate.Value <= DateTime.UtcNow.AddDays(-7)))
+                    {
+                        var user = await _context.Users
+                            .FirstOrDefaultAsync(u => u.Email == toEmail);
 
-                    var softwareName = software?.Name ?? "Software Name";
-                    var licenseExpire = software?.LicenseExpire?.ToString("yyyy-MM-dd") ?? "Expire Date";
 
-                    var emailBody = $@"
+                        var emailBody = $@"
 Dear {user?.FullName ?? "User"},
 
-This email is sent from the e-Administration system to inform you that your software license for:
- - **Software**: {softwareName}
- - **License Expiration Date**: {licenseExpire} is about to expire. 
+This email is sent from the e-Administration system to inform you that your software license is about to expire:
+
+- **Software**: {software.Name}
+- **License Expiration Date**: {software.LicenseExpire?.ToString("yyyy-MM-dd")}
 
 Kindly notify the Admin or Technical Support team to take the necessary actions.
 
 Thank you for your attention.
 Best regards,
 e-Administration Team
-                    ";
+";
 
-                    _emailService.SendEmail(toEmail, subject, emailBody);
+                        // Gửi email
+                        _emailService.SendEmail(toEmail, subject, emailBody);
 
-                    var emailModel = new EmailModel
-                    {
-                        ToEmail = toEmail,
-                        Subject = subject,
-                        Body = emailBody,
-                        SoftwareName = softwareName,
-                        Status = "sent",
-                        SentDate = DateTime.UtcNow
-                    };
+                        // Lưu log email vào database
+                        var emailModel = new EmailModel
+                        {
+                            ToEmail = toEmail,
+                            Subject = subject,
+                            Body = emailBody,
+                            SoftwareName = software.Name,
+                            Status = "sent",
+                            SentDate = DateTime.UtcNow
+                        };
 
-                    await AddEmailAsync(emailModel);
+                        await AddEmailAsync(emailModel);
+                    }
                 }
             }
             catch (Exception ex)
